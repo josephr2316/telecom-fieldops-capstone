@@ -164,6 +164,134 @@ components:
           items:
             type: string
 
+    AuditEvent:
+      type: object
+      required: [id, at, actorUserId, action, entityType, entityId]
+      properties:
+        id: { type: string }
+        at: { type: string, format: date-time }
+        actorUserId: { type: string, nullable: true }
+        action: { type: string }
+        entityType: { type: string }
+        entityId: { type: string }
+        before: { type: object, additionalProperties: true, nullable: true }
+        after: { type: object, additionalProperties: true, nullable: true }
+        correlationId: { type: string }
+
+    Plan:
+      type: object
+      required: [id, name, type, price, currency, isActive]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        type: { type: string, enum: [HOME_INTERNET, MOBILE_DATA, VOICE, TV, BUSINESS] }
+        price: { type: number }
+        currency: { type: string, enum: [DOP, USD] }
+        isActive: { type: boolean }
+
+    Product:
+      type: object
+      required: [id, name, category, isSerialized]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string, enum: [ROUTER, MODEM, ONT, STB, ANTENNA, CABLE, PHONE, TABLET, LAPTOP, SIM] }
+        isSerialized: { type: boolean }
+
+    Branch:
+      type: object
+      required: [id, name, isMain]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        isMain: { type: boolean }
+
+    InventoryItem:
+      type: object
+      required: [id, branchId, productId, qtyAvailable, qtyReserved]
+      properties:
+        id: { type: string }
+        branchId: { type: string }
+        productId: { type: string }
+        qtyAvailable: { type: integer }
+        qtyReserved: { type: integer }
+        updatedAt: { type: string, format: date-time, nullable: true }
+
+    ReserveInventoryRequest:
+      type: object
+      required: [workOrderId, branchId, items]
+      properties:
+        workOrderId: { type: string }
+        branchId: { type: string }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [productId, qty]
+            properties:
+              productId: { type: string }
+              qty: { type: integer, minimum: 1 }
+
+    ReservationRecord:
+      type: object
+      required: [workOrderId, branchId, items, reservedAt]
+      properties:
+        workOrderId: { type: string }
+        branchId: { type: string }
+        items:
+          type: array
+          items:
+            type: object
+            required: [productId, qty]
+            properties:
+              productId: { type: string }
+              qty: { type: integer }
+        reservedAt: { type: string, format: date-time }
+
+    SyncImportRequest:
+      type: object
+      required: [meta, operations]
+      properties:
+        meta:
+          type: object
+          required: [exportedAt, deviceId, appVersion]
+          properties:
+            exportedAt: { type: string, format: date-time }
+            deviceId: { type: string }
+            appVersion: { type: string }
+        operations:
+          type: array
+          items:
+            type: object
+            required: [opId, entityType, entityId, operation, payload, createdAt, createdBy, baseVersion, correlationId]
+            properties:
+              opId: { type: string }
+              entityType: { type: string, enum: [workOrder] }
+              entityId: { type: string }
+              operation: { type: string, enum: [CHANGE_STATUS, ADD_NOTE] }
+              payload: { type: object, additionalProperties: true }
+              createdAt: { type: string, format: date-time }
+              createdBy: { type: string }
+              baseVersion: { type: integer }
+              correlationId: { type: string }
+
+    SyncImportResponse:
+      type: object
+      required: [appliedCount, conflictCount, conflicts]
+      properties:
+        appliedCount: { type: integer }
+        conflictCount: { type: integer }
+        conflicts:
+          type: array
+          items:
+            type: object
+            required: [opId, entityId, reason]
+            properties:
+              opId: { type: string }
+              entityId: { type: string }
+              reason: { type: string }
+
   responses:
     BadRequest:
       description: Validation error

@@ -2,11 +2,12 @@ import type { NextFunction, Request, Response } from 'express';
 import type { ZodTypeAny } from 'zod';
 import { ApiError } from '../domain/errors/apiError';
 
-const mapIssues = (issues: Array<{ path: (string | number)[]; message: string }>) => {
+const mapIssues = (issues: Array<{ path: PropertyKey[]; message: string }>) => {
   const errors: Record<string, string[]> = {};
 
   for (const issue of issues) {
-    const key = issue.path.length > 0 ? issue.path.join('.') : 'body';
+    const key =
+      issue.path.length > 0 ? issue.path.map((part) => String(part)).join('.') : 'body';
     errors[key] = [...(errors[key] ?? []), issue.message];
   }
 
@@ -59,7 +60,7 @@ export const validateParams = (schema: ZodTypeAny) => {
       return;
     }
 
-    req.params = result.data;
+    req.params = result.data as Request['params'];
     next();
   };
 };
