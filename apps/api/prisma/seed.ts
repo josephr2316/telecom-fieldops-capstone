@@ -1,6 +1,10 @@
 /**
- * Seeds the database from scripts/seed-data.json.
- * Run: npx prisma db seed (from apps/api)
+ * One-time seed: loads initial data from scripts/seed-data.json into the database.
+ *
+ * - This script is NOT run when the application starts. It runs only when you
+ *   explicitly execute: npx prisma db seed (from apps/api).
+ * - It is safe to run only when the database is empty (or you set RUN_SEED=force).
+ *   If users already exist, seeding is skipped to avoid duplicate data.
  */
 import 'dotenv/config';
 import * as fs from 'fs';
@@ -48,6 +52,19 @@ const data = JSON.parse(raw) as {
 };
 
 async function main() {
+  const authUsers = data.authUsers ?? [];
+  if (authUsers.length > 0) {
+    const existingCount = await prisma.user.count({
+      where: { id: { in: authUsers.map((u) => u.id) } },
+    });
+    if (existingCount > 0 && process.env.RUN_SEED !== 'force') {
+      console.log(
+        'Seed already applied (seed users exist). Skipping to avoid duplicate data. Set RUN_SEED=force to run anyway.',
+      );
+      return;
+    }
+  }
+
   console.log('Seeding database from seed-data.json...');
 
   // 1) Roles (authRoles -> roles table for API auth)
