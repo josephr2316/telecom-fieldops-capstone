@@ -6,6 +6,7 @@ const config: Config = {
   testMatch: ['**/*.test.ts'],
   clearMocks: true,
   verbose: false,
+  setupFiles: ['dotenv/config'],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.test.json' }],
   }
