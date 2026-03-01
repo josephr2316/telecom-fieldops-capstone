@@ -46,7 +46,8 @@
     { "id": "role-admin", "name": "admin", "permissionKeys": ["*"] },
     { "id": "role-tecnico", "name": "tecnico", "permissionKeys": ["workorders:view-own", "workorders:update-state"] },
     { "id": "role-supervisor", "name": "supervisor", "permissionKeys": ["workorders:*", "inventory:view"] },
-    { "id": "role-ventas", "name": "ventas", "permissionKeys": ["workorders:create", "inventory:reserve"] }
+    { "id": "role-ventas", "name": "ventas", "permissionKeys": ["workorders:create", "inventory:reserve"] },
+    { "id": "role-security", "name": "security", "permissionKeys": ["audit:read", "users:read", "roles:read"] }
   ],
   "authUsers": [
     {
@@ -76,6 +77,13 @@
       "passwordHash": "$2a$10$uoMKrbWC0dJbRTHTeCd1MeKKckBCfzNbY7nk6VD0Z1mvNvPRw/FZ.",
       "blocked": false,
       "roles": ["ventas"]
+    },
+    {
+      "id": "usr-security-01",
+      "email": "security@telecom.local",
+      "passwordHash": "$2a$10$0C9TEt02NqB54ENZTrG8Bec8U1yvEK09IcNonKDWCi9SJJOQdCDQe",
+      "blocked": false,
+      "roles": ["security"]
     }
   ],
   "audits": [],
@@ -88,11 +96,18 @@
       "customerId": "cust_001",
       "branchId": "br_main",
       "planId": "plan_home_200",
+      "assignedTechUserId": "usr-tecnico-01",
       "version": 0,
       "items": [
         { "productId": "prod_router_ax", "qty": 1 },
         { "productId": "prod_ont_fiber", "qty": 1 },
         { "productId": "prod_cable_fiber_10m", "qty": 2 }
+      ],
+      "technicianNotes": "Instalación pendiente. Cliente solicita horario matutino. Equipo ya reservado en sucursal principal.",
+      "checklist": [
+        { "id": "1", "label": "Verificar equipo en sitio", "completed": false },
+        { "id": "2", "label": "Comprobar señal", "completed": false },
+        { "id": "3", "label": "Documentar resultado", "completed": false }
       ],
       "createdAt": "2025-02-28T10:00:00.000Z",
       "updatedAt": "2025-02-28T10:00:00.000Z"
@@ -104,8 +119,15 @@
       "customerId": "cust_002",
       "branchId": "br_east",
       "planId": "plan_mobile_20gb",
+      "assignedTechUserId": "usr-tecnico-01",
       "version": 1,
       "items": [{ "productId": "prod_sim_5g", "qty": 1 }],
+      "technicianNotes": "Venta SIM 5G activada. Cliente recogió en ventanilla. Pendiente activación en red.",
+      "checklist": [
+        { "id": "1", "label": "Entrega de SIM", "completed": true },
+        { "id": "2", "label": "Registro en sistema", "completed": true },
+        { "id": "3", "label": "Activación en red", "completed": false }
+      ],
       "createdAt": "2025-02-28T11:00:00.000Z",
       "updatedAt": "2025-02-28T11:30:00.000Z"
     },
@@ -115,9 +137,16 @@
       "status": "SCHEDULED",
       "customerId": "cust_003",
       "branchId": "br_main",
-      "assignedTechUserId": "usr_tech_07",
+      "planId": "plan_home_200",
+      "assignedTechUserId": "usr-tecnico-01",
       "version": 2,
-      "items": [],
+      "items": [ { "productId": "prod_cable_fiber_10m", "qty": 1 } ],
+      "technicianNotes": "Cliente reporta falla de señal desde ayer. Revisión en poste y medición de niveles programada. Equipo de medición listo.",
+      "checklist": [
+        { "id": "1", "label": "Verificar equipo en sitio", "completed": true },
+        { "id": "2", "label": "Comprobar señal", "completed": false },
+        { "id": "3", "label": "Documentar resultado", "completed": false }
+      ],
       "createdAt": "2025-02-27T09:00:00.000Z",
       "updatedAt": "2025-02-28T08:00:00.000Z"
     }

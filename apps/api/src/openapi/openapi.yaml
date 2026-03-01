@@ -354,8 +354,34 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WorkOrderItem'
+        technicianNotes: { type: string, description: "Notas del técnico (siempre presente, vacío si no hay)" }
+        checklist:
+          type: array
+          description: "Checklist del técnico (siempre presente, array vacío si no hay)"
+          items:
+            type: object
+            required: [id, label, completed]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              completed: { type: boolean }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+    UpdateWorkOrderTechDetailsRequest:
+      type: object
+      properties:
+        technicianNotes: { type: string, nullable: true }
+        checklist:
+          type: array
+          nullable: true
+          items:
+            type: object
+            required: [id, label, completed]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              completed: { type: boolean }
 
     CreateWorkOrderRequest:
       type: object
@@ -982,7 +1008,30 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
 
-
+  /work-orders/{id}/tech-details:
+    patch:
+      tags: [WorkOrders]
+      summary: Actualizar notas del técnico y checklist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateWorkOrderTechDetailsRequest" }
+      responses:
+        "200":
+          description: work order actualizado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkOrder" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /audit:
     get:

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { ApiError } from '../domain/errors/apiError';
 import { workOrderService } from '../domain/services/workorder.service';
 import { authenticate } from '../middleware/auth';
-import { requirePermissions, requireAnyPermission } from '../middleware/rbac';
+import { requirePermissions, requireAnyPermission, hasPermission } from '../middleware/rbac';
 import { validateBody, validateParams } from '../middleware/validate';
 import { workOrderController } from '../presentation/controllers/workOrder.controller';
 
@@ -58,7 +58,8 @@ router.get(
   requireAnyPermission(['workorders:read', 'workorders:view-own']),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const hasReadAll = req.user?.permissions?.some((p) => p === 'workorders:read' || p === 'workorders:*');
+      const granted = req.user?.permissions ?? [];
+      const hasReadAll = hasPermission(granted, 'workorders:read');
       const assignedToUserId = hasReadAll ? undefined : req.user?.id;
       const list = await workOrderService.listWorkOrders(assignedToUserId);
       res.status(200).json(list);
@@ -79,7 +80,8 @@ router.get(
         res.status(404).json({ message: 'Work order not found' });
         return;
       }
-      const hasReadAll = req.user?.permissions?.some((p) => p === 'workorders:read' || p === 'workorders:*');
+      const granted = req.user?.permissions ?? [];
+      const hasReadAll = hasPermission(granted, 'workorders:read');
       if (!hasReadAll && wo.assignedTechUserId !== req.user?.id) {
         res.status(404).json({ message: 'Work order not found' });
         return;

@@ -13,6 +13,7 @@
     "migrate": "npx prisma migrate deploy",
     "migrate:diff": "npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script",
     "openapi:validate": "node ../../scripts/validate-openapi.js src/openapi/openapi.yaml",
+    "verify-seed": "ts-node --transpile-only -r dotenv/config scripts/verify-seed-in-db.ts",
     "test": "jest --runInBand",
     "test:watch": "jest --watch"
   },
