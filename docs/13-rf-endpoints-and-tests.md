@@ -69,6 +69,24 @@ En `infra/routes/index.ts` se montan los routers, por ejemplo: `router.use(healt
 3. Los criterios detallados por RF están en las secciones siguientes.
 ---
 
+## Referencia rápida RF-04 a RF-12
+
+| RF | Descripción | Endpoints | Archivos principales |
+|----|-------------|-----------|---------------------|
+| RF-04 | Catálogo de planes | GET/POST/PATCH/DELETE /catalog/plans, activate, deactivate | `routes/plans.routes.ts`, `domain/services/plans.service.ts` |
+| RF-05 | Catálogo de productos | GET/POST/PATCH/DELETE /catalog/products | `routes/products.routes.ts`, `domain/services/products.service.ts` |
+| RF-06 | Inventario por sucursal | GET /inventory?branchId=, GET /inventory/branches, GET /inventory/products | `routes/inventory.routes.ts`, `domain/services/invetory.service.ts` |
+| RF-07 | Reservar y liberar inventario | POST /inventory/reservations, DELETE /inventory/reservations/:workOrderId | `routes/inventory.routes.ts`, `domain/services/invetory.service.ts` |
+| RF-08 | Crear work order por tipo | POST /work-orders (type, customerId, branchId, planId, items) | `routes/workorders.routes.ts`, `domain/services/workorder.service.ts` |
+| RF-09 | Cambiar estado (state machine) | PATCH /work-orders/:id/status (newStatus, baseVersion) | `routes/workorders.routes.ts`, `domain/services/workorder.service.ts`, `domain/stateMachine/workOrderStateMachine.ts` |
+| RF-10 | Módulo técnico offline | Soporte API: GET /work-orders, PATCH /work-orders/:id/status. La parte offline (guardar en dispositivo, checklist) es frontend (ADR-0002). | — |
+| RF-11 | Exportar offline a JSON | El cliente exporta desde su cola offline (LocalStorage). No hay endpoint de export en la API. | `docs/13-adr/ADR-0002-storage-offline-sync.md` |
+| RF-12 | Importar offline desde JSON | POST /api/v1/sync/import (meta + operations). Requiere permiso sync:import. | `routes/sync.routes.ts`, `domain/services/sync.service.ts`, montaje en `infra/routes/index.ts` bajo /sync |
+
+Contrato OpenAPI: todos los paths anteriores están definidos en `apps/api/src/openapi/openapi.yaml`.
+
+---
+
 ## RF-13 Dashboard KPIs (referencia rapida)
 
 - Endpoint: `GET /api/v1/dashboard/kpis`
