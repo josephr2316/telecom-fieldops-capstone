@@ -8,6 +8,7 @@ import {
   pushToOfflineQueue,
   removeOfflineQueueItem,
   setOfflineQueue,
+  downloadOfflineExport,
   type OfflineQueueItem,
 } from "../utils/offlineQueue";
 
@@ -201,6 +202,17 @@ export default function MyOrdersPage() {
             {isOnline && currentQueue.length > 0 && (
               <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded text-green-800 text-sm">
                 Cola pendiente: {currentQueue.length} cambio(s). Sincronizando…
+              </div>
+            )}
+            {currentQueue.length > 0 && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => downloadOfflineExport()}
+                  className="bg-[#002D72] text-white px-4 py-2 text-sm rounded-sm hover:bg-[#001F4D]"
+                >
+                  Exportar cambios offline a JSON (RF-11)
+                </button>
               </div>
             )}
           </header>
