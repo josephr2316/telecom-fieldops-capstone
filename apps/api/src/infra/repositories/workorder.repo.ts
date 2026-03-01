@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
+import { Prisma } from '../../generated/prisma';
 import { prisma } from '../db/prisma/prismaClient';
-import type { WorkOrder, WorkOrderItem, WorkOrderStatus, WorkOrderType } from '../../domain/models/types';
+import type { ChecklistItem, WorkOrder, WorkOrderItem, WorkOrderStatus, WorkOrderType } from '../../domain/models/types';
 
 export interface CreateWorkOrderInput {
   type: WorkOrderType;
@@ -18,8 +19,10 @@ export interface UpdateWorkOrderInput {
   cancelledAt?: string | null;
   branchId?: string;
   planId?: string;
-  assignedTechUserId?: string;
+  assignedTechUserId?: string | null;
   items?: WorkOrderItem[];
+  technicianNotes?: string | null;
+  checklist?: ChecklistItem[] | null;
 }
 
 type PrismaWorkOrder = {
@@ -32,12 +35,15 @@ type PrismaWorkOrder = {
   assignedTechUserId: string | null;
   version: number;
   items: unknown;
+  technicianNotes?: string | null;
+  checklist?: unknown;
   createdAt: Date;
   updatedAt: Date;
 };
 
 function toDomainWorkOrder(row: PrismaWorkOrder): WorkOrder {
   const items = Array.isArray(row.items) ? (row.items as WorkOrderItem[]) : [];
+  const checklist = row.checklist != null && Array.isArray(row.checklist) ? (row.checklist as ChecklistItem[]) : null;
   return {
     id: row.id,
     type: row.type as WorkOrderType,
@@ -48,6 +54,8 @@ function toDomainWorkOrder(row: PrismaWorkOrder): WorkOrder {
     assignedTechUserId: row.assignedTechUserId ?? undefined,
     version: row.version,
     items,
+    technicianNotes: row.technicianNotes != null ? row.technicianNotes : undefined,
+    checklist: checklist ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -56,6 +64,14 @@ function toDomainWorkOrder(row: PrismaWorkOrder): WorkOrder {
 export const workOrderRepository = {
   async listAll(): Promise<WorkOrder[]> {
     const rows = await prisma.workOrder.findMany({ orderBy: { createdAt: 'desc' } });
+    return rows.map(toDomainWorkOrder);
+  },
+
+  async listByAssignedTech(userId: string): Promise<WorkOrder[]> {
+    const rows = await prisma.workOrder.findMany({
+      where: { assignedTechUserId: userId },
+      orderBy: { createdAt: 'desc' },
+    });
     return rows.map(toDomainWorkOrder);
   },
 
@@ -95,6 +111,8 @@ export const workOrderRepository = {
       planId?: string | null;
       assignedTechUserId?: string | null;
       items?: object;
+      technicianNotes?: string | null;
+      checklist?: object | typeof Prisma.DbNull;
     } = {};
 
     if (input.status !== undefined) data.status = input.status;
@@ -103,8 +121,15 @@ export const workOrderRepository = {
     if (input.planId !== undefined) data.planId = input.planId ?? null;
     if (input.assignedTechUserId !== undefined) data.assignedTechUserId = input.assignedTechUserId ?? null;
     if (input.items !== undefined) data.items = input.items as object;
+    if (input.technicianNotes !== undefined) data.technicianNotes = input.technicianNotes ?? null;
+    if (input.checklist !== undefined) {
+      data.checklist = input.checklist === null ? Prisma.DbNull : (input.checklist as object);
+    }
 
-    const updated = await prisma.workOrder.update({ where: { id }, data });
+    const updated = await prisma.workOrder.update({
+      where: { id },
+      data: data as Parameters<typeof prisma.workOrder.update>[0]['data'],
+    });
     return toDomainWorkOrder(updated);
   },
 };

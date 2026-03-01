@@ -1,5 +1,6 @@
 import { ApiError } from '../errors/apiError';
-import type { WorkOrder, WorkOrderItem, WorkOrderStatus, WorkOrderType } from '../models/types';
+import type { ChecklistItem, WorkOrder, WorkOrderItem, WorkOrderStatus, WorkOrderType } from '../models/types';
+import type { UpdateWorkOrderInput } from '../../infra/repositories/workorder.repo';
 import { workOrderRepository } from '../../infra/repositories/workorder.repo';
 import { inventoryService } from './invetory.service';
 import { allowedTransitions, validateTransition } from '../stateMachine/workOrderStateMachine';
@@ -20,8 +21,10 @@ export interface UpdateWorkOrderStatusPayload {
 }
 
 export const workOrderService = {
-  async listWorkOrders(): Promise<Array<WorkOrder & { allowedTransitions: WorkOrderStatus[] }>> {
-    const list = await workOrderRepository.listAll();
+  async listWorkOrders(assignedToUserId?: string): Promise<Array<WorkOrder & { allowedTransitions: WorkOrderStatus[] }>> {
+    const list = assignedToUserId
+      ? await workOrderRepository.listByAssignedTech(assignedToUserId)
+      : await workOrderRepository.listAll();
     return list.map((wo) => ({
       ...wo,
       allowedTransitions: allowedTransitions(wo.type, wo.status),
@@ -116,5 +119,52 @@ export const workOrderService = {
     });
 
     return updated;
+  },
+
+  async assignTech(
+    id: string,
+    assignedTechUserId: string | null,
+    actorUserId: string | null,
+    correlationId: string,
+  ) {
+    const wo = await workOrderRepository.findById(id);
+    if (!wo) return null;
+
+    const before = { assignedTechUserId: wo.assignedTechUserId };
+    const payload: UpdateWorkOrderInput = {
+      assignedTechUserId: assignedTechUserId === null ? null : assignedTechUserId,
+    };
+    const updated = await workOrderRepository.update(id, payload);
+    if (!updated) return null;
+
+    await auditService.record({
+      actorUserId,
+      action: AUDIT_ACTIONS.WORKORDER_STATUS,
+      entityType: 'WorkOrder',
+      entityId: id,
+      before,
+      after: { assignedTechUserId: updated.assignedTechUserId },
+      correlationId,
+    });
+
+    return { ...updated, allowedTransitions: allowedTransitions(updated.type, updated.status) };
+  },
+
+  async updateTechDetails(
+    id: string,
+    payload: { technicianNotes?: string | null; checklist?: ChecklistItem[] | null },
+    actorUserId: string | null,
+  ) {
+    const wo = await workOrderRepository.findById(id);
+    if (!wo) return null;
+    if (wo.assignedTechUserId !== actorUserId) {
+      throw new ApiError(403, 'Forbidden', 'Only the assigned technician can update notes/checklist.', 'urn:telecom:error:forbidden');
+    }
+    const updated = await workOrderRepository.update(id, {
+      technicianNotes: payload.technicianNotes,
+      checklist: payload.checklist,
+    });
+    if (!updated) return null;
+    return { ...updated, allowedTransitions: allowedTransitions(updated.type, updated.status) };
   },
 };

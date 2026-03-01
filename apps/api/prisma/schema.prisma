@@ -119,6 +119,8 @@ model WorkOrder {
   assignedTechUserId String?  @map("assigned_tech_user_id")
   version            Int      @default(0)
   items              Json     @default("[]")
+  technicianNotes    String?  @map("technician_notes")
+  checklist          Json?    @map("checklist")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
   reservation        Reservation?

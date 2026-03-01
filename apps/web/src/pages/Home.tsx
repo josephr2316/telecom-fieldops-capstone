@@ -35,6 +35,11 @@ const NAV_CARDS: NavCard[] = [
     path: "/work-orders",
   },
   {
+    title: "Mis Ordenes",
+    description: "Ordenes asignadas: checklist, notas y sincronizacion offline.",
+    path: "/my-orders",
+  },
+  {
     title: "Dashboard Operativo",
     description: "Monitorea KPIs y alertas de operacion.",
     path: "/dashboard",
