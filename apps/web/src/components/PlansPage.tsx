@@ -4,6 +4,7 @@ import { Plan, PlanCategory, PlanStatus } from "../types/plans";
 import { usePlans } from "./usePlans";
 import { PlanCard } from "./PlanCard";
 import Layout from "../layouts/Layout";
+import PageNavigation from "./PageNavigation";
 
 type StatusFilter = "ALL" | PlanStatus;
 type CategoryFilter = "ALL" | PlanCategory;
@@ -53,6 +54,8 @@ export function PlansPage() {
     <Layout>
       <div className="min-h-screen bg-gray-100 py-10">
         <div className="max-w-6xl mx-auto px-6 text-gray-800">
+          <PageNavigation />
+
           <header className="bg-white border border-gray-200 rounded-sm p-6 mb-6">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
               <div>

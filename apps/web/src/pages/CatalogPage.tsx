@@ -4,6 +4,7 @@ import { ProductCard } from "../components/catalog/ProductCard";
 import { ProductDetail } from "../components/catalog/ProductDetail";
 import type { Product } from "../types/product";
 import Layout from "../layouts/Layout";
+import PageNavigation from "../components/PageNavigation";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
@@ -61,6 +62,7 @@ export const CatalogPage: React.FC = () => {
     <Layout>
       <div className="min-h-screen bg-gray-100 py-10">
         <div className="max-w-6xl mx-auto px-6 text-gray-800">
+          <PageNavigation />
           <header className="bg-white border border-gray-200 rounded-sm p-6 mb-6">
             <button onClick={() => navigate("/home")} className="text-sm text-gray-600 hover:text-gray-800 mb-3">
               Volver al panel principal

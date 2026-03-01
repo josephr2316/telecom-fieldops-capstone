@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../layouts/Layout";
+import PageNavigation from "../components/PageNavigation";
 
 type Kpi = {
   label: string;
@@ -59,6 +60,23 @@ export default function AdminDashboardPage() {
     <Layout>
       <div className="min-h-screen bg-gray-100 py-10">
         <div className="max-w-6xl mx-auto px-6 text-gray-800">
+          <PageNavigation />
+          <nav className="bg-white border border-gray-200 rounded-sm mb-6">
+            <ul className="px-6 flex gap-10 text-sm text-gray-700">
+              <li className="py-4 border-b-2 border-[#002D72] text-[#002D72] font-medium cursor-pointer">
+                Resumen
+              </li>
+              <li className="py-4 hover:text-[#002D72] cursor-pointer">
+                Rendimiento por sucursal
+              </li>
+              <li className="py-4 hover:text-[#002D72] cursor-pointer">
+                Tickets
+              </li>
+              <li className="py-4 hover:text-[#002D72] cursor-pointer">
+                Alertas
+              </li>
+            </ul>
+          </nav>
           <header className="bg-white border border-gray-200 rounded-sm p-6 mb-6">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
               <div>

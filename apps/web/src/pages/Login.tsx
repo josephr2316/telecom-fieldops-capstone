@@ -107,6 +107,19 @@ function LoginPage() {
             {loading ? "Ingresando..." : "Ingresar"}
           </button>
         </form>
+
+        <section className="bg-white border border-gray-200 rounded-sm p-6 mt-6">
+          <h2 className="text-2xl font-semibold text-gray-800">Credenciales de prueba</h2>
+          <p className="text-sm text-gray-600 mt-1">Usa estas cuentas para acceder al sistema en ambiente demo.</p>
+          <div className="mt-4 space-y-2">
+            <p className="text-sm text-gray-700">
+              Admin: <span className="text-gray-600">admin@telecom.local / Admin123!</span>
+            </p>
+            <p className="text-sm text-gray-700">
+              Ventas: <span className="text-gray-600">ventas@telecom.local / Ventas123!</span>
+            </p>
+          </div>
+        </section>
       </div>
     </div>
   );
