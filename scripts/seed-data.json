@@ -79,5 +79,47 @@
     }
   ],
   "audits": [],
-  "revokedRefreshTokens": []
+  "revokedRefreshTokens": [],
+  "workOrders": [
+    {
+      "id": "wo_seed_01",
+      "type": "NEW_SERVICE_INSTALL",
+      "status": "DRAFT",
+      "customerId": "cust_001",
+      "branchId": "br_main",
+      "planId": "plan_home_200",
+      "version": 0,
+      "items": [
+        { "productId": "prod_router_ax", "qty": 1 },
+        { "productId": "prod_ont_fiber", "qty": 1 },
+        { "productId": "prod_cable_fiber_10m", "qty": 2 }
+      ],
+      "createdAt": "2025-02-28T10:00:00.000Z",
+      "updatedAt": "2025-02-28T10:00:00.000Z"
+    },
+    {
+      "id": "wo_seed_02",
+      "type": "PLAN_AND_EQUIPMENT_SALE",
+      "status": "SUBMITTED",
+      "customerId": "cust_002",
+      "branchId": "br_east",
+      "planId": "plan_mobile_20gb",
+      "version": 1,
+      "items": [{ "productId": "prod_sim_5g", "qty": 1 }],
+      "createdAt": "2025-02-28T11:00:00.000Z",
+      "updatedAt": "2025-02-28T11:30:00.000Z"
+    },
+    {
+      "id": "wo_seed_03",
+      "type": "CLAIM_TROUBLESHOOT",
+      "status": "SCHEDULED",
+      "customerId": "cust_003",
+      "branchId": "br_main",
+      "assignedTechUserId": "usr_tech_07",
+      "version": 2,
+      "items": [],
+      "createdAt": "2025-02-27T09:00:00.000Z",
+      "updatedAt": "2025-02-28T08:00:00.000Z"
+    }
+  ]
 }
