@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../services/apiClient";
 import { ApiError } from "../types/plans";
 
@@ -20,12 +20,20 @@ interface LoginResponse {
 
 function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("session") === "expired") {
+      setError("Sesion expirada o no autorizada. Vuelve a iniciar sesion.");
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const canSubmit = email.trim().includes("@") && password.length >= 8 && !loading;
 

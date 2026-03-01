@@ -5,7 +5,7 @@ import { ProductDetail } from "../components/catalog/ProductDetail";
 import type { Product } from "../types/product";
 import Layout from "../layouts/Layout";
 import PageNavigation from "../components/PageNavigation";
-import { API_BASE_URL } from "../config/env";
+import { apiClient } from "../services/apiClient";
 
 const CATEGORY_LABELS: Record<string, string> = {
   ALL: "Todos",
@@ -32,9 +32,7 @@ export const CatalogPage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${API_BASE_URL}/api/v1/products`);
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        const data: Product[] = await res.json();
+        const data = await apiClient.get<Product[]>("/api/v1/catalog/products");
         setProducts(data);
       } catch (err) {
         console.error("Error cargando productos:", err);
