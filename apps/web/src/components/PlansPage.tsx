@@ -5,6 +5,7 @@ import { usePlans } from "./usePlans";
 import { PlanCard } from "./PlanCard";
 import Layout from "../layouts/Layout";
 import PageNavigation from "./PageNavigation";
+import StatusBanner from "./StatusBanner";
 
 type StatusFilter = "ALL" | PlanStatus;
 type CategoryFilter = "ALL" | PlanCategory;
@@ -90,7 +91,15 @@ export function PlansPage() {
             </article>
           </section>
 
-          {error && <div className="bg-white border border-gray-200 rounded-sm p-4 text-sm text-gray-700 mb-6">{error}</div>}
+          {error && (
+            <StatusBanner
+              tone="error"
+              title="No se pudo cargar el catalogo de planes"
+              message={error}
+              className="mb-6"
+              role="alert"
+            />
+          )}
 
           <section className="bg-white border border-gray-200 rounded-sm p-6 mb-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
