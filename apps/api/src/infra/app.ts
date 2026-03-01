@@ -1,7 +1,6 @@
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import { env } from '../config/env';
 import { correlationId } from '../middleware/correlationId';
 import { errorHandler, notFoundHandler } from '../middleware/errorHandler';
 import { sanitizeResponseMiddleware } from '../middleware/sanitize';
@@ -9,29 +8,19 @@ import { buildApiRouter } from './routes';
 
 export function createApp() {
   const app = express();
-  const allowedOrigins = [
-    env.FRONTEND_URL,
-    env.API_PUBLIC_URL,
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ].filter(Boolean);
-
   app.use(helmet());
+  // Normalize multiple slashes in path so /api/v1//catalog/plans becomes /api/v1/catalog/plans
+  app.use((req, _res, next) => {
+    const [path, qs] = (req.url || '').split('?');
+    if (path.includes('//')) {
+      req.url = path.replace(/\/+/g, '/') + (qs ? `?${qs}` : '');
+    }
+    next();
+  });
+  // CORS abierto: acepta cualquier origen (útil para desarrollo y pruebas desde cualquier front)
   app.use(
     cors({
-      origin: (origin, callback) => {
-        if (!origin) {
-          callback(null, true);
-          return;
-        }
-
-        if (allowedOrigins.includes(origin)) {
-          callback(null, true);
-          return;
-        }
-
-        callback(new Error('Not allowed by CORS'));
-      },
+      origin: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-Id'],
       credentials: true,

@@ -30,46 +30,53 @@ export interface UpdatePlanInput {
   dataLimitGB?: number | null;
 }
 
+/** Safe date to ISO string (handles Date or string from DB). */
+function toIso(date: Date | string): string {
+  return date instanceof Date ? date.toISOString() : new Date(date).toISOString();
+}
+
 /** Maps a Prisma Plan row to the domain Plan type (Decimal -> number, dataLimitGb -> dataLimitGB). */
 function toDomainPlan(row: {
   id: string;
   name: string;
   type: string;
-  price: { toNumber?: () => number };
+  price: unknown;
   currency: string;
   isActive: boolean;
   description: string;
   category: string;
   status: string;
-  monthlyPrice: { toNumber?: () => number };
+  monthlyPrice: unknown;
   downloadSpeedMbps: number | null;
   uploadSpeedMbps: number | null;
   dataLimitGb: number | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }): Plan {
-  const priceNum = typeof row.price === 'object' && row.price != null && 'toNumber' in row.price
-    ? (row.price as { toNumber: () => number }).toNumber()
-    : Number(row.price);
-  const monthlyNum = typeof row.monthlyPrice === 'object' && row.monthlyPrice != null && 'toNumber' in row.monthlyPrice
-    ? (row.monthlyPrice as { toNumber: () => number }).toNumber()
-    : Number(row.monthlyPrice);
+  const priceNum =
+    typeof row.price === 'object' && row.price != null && 'toNumber' in (row.price as object)
+      ? (row.price as { toNumber: () => number }).toNumber()
+      : Number(row.price);
+  const monthlyNum =
+    typeof row.monthlyPrice === 'object' && row.monthlyPrice != null && 'toNumber' in (row.monthlyPrice as object)
+      ? (row.monthlyPrice as { toNumber: () => number }).toNumber()
+      : Number(row.monthlyPrice);
   return {
     id: row.id,
     name: row.name,
     type: row.type as PlanType,
-    price: priceNum,
+    price: Number.isFinite(priceNum) ? priceNum : 0,
     currency: row.currency as PlanCurrency,
     isActive: row.isActive,
-    description: row.description,
+    description: row.description ?? '',
     category: row.category as PlanCategory,
     status: row.status as PlanStatus,
-    monthlyPrice: monthlyNum,
+    monthlyPrice: Number.isFinite(monthlyNum) ? monthlyNum : 0,
     downloadSpeedMbps: row.downloadSpeedMbps,
     uploadSpeedMbps: row.uploadSpeedMbps,
     dataLimitGB: row.dataLimitGb,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
+    createdAt: toIso(row.createdAt),
+    updatedAt: toIso(row.updatedAt),
   };
 }
 

@@ -94,17 +94,25 @@ const coreErrorHandler = (error: unknown, req: Request, res: Response, _next: Ne
     return;
   }
 
+  const err = error instanceof Error ? error : new Error(String(error));
   logger.error(
     {
       ...baseReqLog(req),
       correlationId: req.correlationId,
       action: 'UNHANDLED_ERROR',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: err.message,
+      errorName: err.name,
+      stack: err.stack,
     },
     'Unhandled error',
   );
 
-  res.status(500).json(toInternalProblem(req));
+  const body = toInternalProblem(req);
+  if (process.env.NODE_ENV === 'development') {
+    body.detail = err.message;
+    (body as unknown as Record<string, unknown>).errorName = err.name;
+  }
+  res.status(500).json(body);
 };
 
 export const errorHandler = () => coreErrorHandler;
