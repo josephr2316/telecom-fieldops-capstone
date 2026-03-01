@@ -181,15 +181,18 @@ components:
       type: object
       required: [id, at, actorUserId, action, entityType, entityId]
       properties:
-        id: { type: string }
-        at: { type: string, format: date-time }
-        actorUserId: { type: string, nullable: true }
-        action: { type: string }
-        entityType: { type: string }
-        entityId: { type: string }
+        id: { type: string, example: "evt-001" }
+        at: { type: string, format: date-time, example: "2026-02-27T14:30:00Z" }
+        actorUserId: { type: string, nullable: true, example: "admin_01" }
+        action: 
+          type: string
+          description: "Código de acción estandarizado (ej: AUD-03 USERBLOCKED)"
+          example: "AUD-03 USERBLOCKED"
+        entityType: { type: string, example: "user" }
+        entityId: { type: string, example: "usr-2c29e6e4-2581-4b5d-a257" }
         before: { type: object, additionalProperties: true, nullable: true }
         after: { type: object, additionalProperties: true, nullable: true }
-        correlationId: { type: string }
+        correlationId: { type: string, example: "c-998877" }
 
     Plan:
       type: object
@@ -984,6 +987,7 @@ paths:
   /audit:
     get:
       tags: [Audit]
+      summary: Lista paginada con filtros de auditoría
       parameters:
         - name: entityType
           in: query

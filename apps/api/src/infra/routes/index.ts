@@ -24,8 +24,6 @@ export function buildApiRouter() {
   router.use(kpiRouter());
   router.use('/users', usersRouter);
   router.use('/roles', rolesRouter);
-
-  /// Mount audit: protected by auth + permit audit:read
   router.use('/audit', authenticate, requirePermissions(['audit:read']), auditRouter());
 
   return router;
