@@ -7,7 +7,13 @@ URL Web: https://telecom-fieldops-capstone.vercel.app/
 URL API: https://telecom-fieldops-capstone-production.up.railway.app/
 - Health en producción: https://telecom-fieldops-capstone-production.up.railway.app/api/v1/health
 
-Swagger/OpenAPI: `apps/api/src/openapi/openapi.yaml`
+**Contrato OpenAPI (especificación):** `apps/api/src/openapi/openapi.yaml`
+
+**Swagger UI (probar endpoints en el navegador):**
+- Local: con la API en marcha, abre **http://localhost:3000/api-docs**
+- Producción: **https://telecom-fieldops-capstone-production.up.railway.app/api-docs**
+
+En Swagger UI puedes ejecutar todos los endpoints (login, catalog, inventory, etc.). El spec se carga desde `openapi.yaml`; la ruta `/api-docs` no está definida dentro del YAML, es una ruta de la app que sirve la interfaz.
 
 ## Cómo ejecutar local
 
@@ -26,6 +32,17 @@ npm start
 cd apps/api
 npm run dev
 ```
+
+### Probar la API con Swagger UI
+
+1. Arranca la API (`npm run dev` o `npm start` desde `apps/api`).
+2. Abre en el navegador: **http://localhost:3000/api-docs**
+3. En la interfaz:
+   - **POST /auth/login**: body `{"email":"admin@telecom.local","password":"Admin123!"}` → obtienes `accessToken`.
+   - Para rutas protegidas: clic en **Authorize**, pega `Bearer <accessToken>` y confirma.
+   - Prueba el resto de endpoints (GET /catalog/plans, etc.).
+
+En producción la URL es: **https://telecom-fieldops-capstone-production.up.railway.app/api-docs**
 
 ## Base de datos y Prisma (Supabase)
 
