@@ -24,6 +24,7 @@ apps/api/src/
 │       ├── auth.ts            # RF-01: POST /auth/login, POST /auth/logout (opcional).
 │       ├── users.ts           # RF-02: GET /users, POST /users/:userId/block; opcional POST/PATCH /users.
 │       └── roles.ts           # RF-03: GET /roles; opcional POST/PATCH /roles; asignación roles a usuarios.
+│       └── audit.ts           # RF‑14: GET endpoints de consulta de eventos de auditoría.
 └── middleware/
     ├── correlationId.ts       # Añade correlationId a cada request (logs/auditoría).
     ├── errorHandler.ts        # Manejo global de errores (ProblemDetails).

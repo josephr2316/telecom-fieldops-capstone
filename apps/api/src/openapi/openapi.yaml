@@ -176,15 +176,18 @@ components:
       type: object
       required: [id, at, actorUserId, action, entityType, entityId]
       properties:
-        id: { type: string }
-        at: { type: string, format: date-time }
-        actorUserId: { type: string, nullable: true }
-        action: { type: string }
-        entityType: { type: string }
-        entityId: { type: string }
+        id: { type: string, example: "evt-001" }
+        at: { type: string, format: date-time, example: "2026-02-27T14:30:00Z" }
+        actorUserId: { type: string, nullable: true, example: "admin_01" }
+        action: 
+          type: string
+          description: "Código de acción estandarizado (ej: AUD-03 USERBLOCKED)"
+          example: "AUD-03 USERBLOCKED"
+        entityType: { type: string, example: "user" }
+        entityId: { type: string, example: "usr-2c29e6e4-2581-4b5d-a257" }
         before: { type: object, additionalProperties: true, nullable: true }
         after: { type: object, additionalProperties: true, nullable: true }
-        correlationId: { type: string }
+        correlationId: { type: string, example: "c-998877" }
 
     Plan:
       type: object
@@ -711,6 +714,7 @@ paths:
   /audit:
     get:
       tags: [Audit]
+      summary: Lista paginada con filtros de auditoría
       parameters:
         - name: entityType
           in: query
@@ -720,16 +724,282 @@ paths:
           in: query
           required: false
           schema: { type: string }
+        - name: action
+          in: query
+          required: false
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        "200":
+          description: paginated list of audit events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/AuditEvent" }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      offset: { type: integer }
+                      hasMore: { type: boolean }
+              examples:
+                success:
+                  summary: List of audit events with pagination
+                  value:
+                    items:
+                      - id: "evt-001"
+                        at: "2026-02-27T14:30:00Z"
+                        actorUserId: "user-123"
+                        action: "CREATE"
+                        entityType: "WorkOrder"
+                        entityId: "wo-456"
+                        correlationId: "550e8400-e29b-41d4-a716"
+                    pagination:
+                      total: 150
+                      limit: 50
+                      offset: 0
+                      hasMore: true
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /audit/{auditId}:
+    get:
+      tags: [Audit]
+      summary: Retrieve a single audit event by id
+      parameters:
+        - name: auditId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: single audit event
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuditEvent" }
+              examples:
+                success:
+                  summary: Single audit event
+                  value:
+                    id: "evt-001"
+                    at: "2026-02-27T14:30:00Z"
+                    actorUserId: "user-123"
+                    action: "CREATE"
+                    entityType: "WorkOrder"
+                    entityId: "wo-456"
+                    before: null
+                    after:
+                      status: "OPEN"
+                      technician: "Torres"
+                    correlationId: "550e8400-e29b-41d4-a716"
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetails" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /audit/entity/{entityType}/{entityId}:
+    get:
+      tags: [Audit]
+      summary: Get history for a specific entity
+      parameters:
+        - name: entityType
+          in: path
+          required: true
+          schema: { type: string }
+        - name: entityId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: audit history of an entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entity:
+                    type: object
+                    properties:
+                      type: { type: string }
+                      id: { type: string }
+                  events:
+                    type: array
+                    items: { $ref: "#/components/schemas/AuditEvent" }
+                  total: { type: integer }
+              examples:
+                success:
+                  summary: Entity audit history
+                  value:
+                    entity:
+                      type: "WorkOrder"
+                      id: "wo-456"
+                    events:
+                      - id: "evt-001"
+                        at: "2026-02-27T14:30:00Z"
+                        actorUserId: "user-123"
+                        action: "CREATE"
+                        entityType: "WorkOrder"
+                        entityId: "wo-456"
+                      - id: "evt-002"
+                        at: "2026-02-27T15:45:00Z"
+                        actorUserId: "user-456"
+                        action: "UPDATE"
+                        entityType: "WorkOrder"
+                        entityId: "wo-456"
+                    total: 2
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /audit/user/{userId}:
+    get:
+      tags: [Audit]
+      summary: Get events performed by a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+      responses:
+        "200":
+          description: audit events by user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { type: string }
+                  events:
+                    type: array
+                    items: { $ref: "#/components/schemas/AuditEvent" }
+                  count: { type: integer }
+              examples:
+                success:
+                  summary: Events performed by user
+                  value:
+                    user: "user-123"
+                    events:
+                      - id: "evt-001"
+                        at: "2026-02-27T14:30:00Z"
+                        actorUserId: "user-123"
+                        action: "CREATE"
+                        entityType: "WorkOrder"
+                        entityId: "wo-456"
+                        correlationId: "550e8400-e29b-41d4-a716"
+                      - id: "evt-003"
+                        at: "2026-02-26T09:20:00Z"
+                        actorUserId: "user-123"
+                        action: "RESERVE"
+                        entityType: "InventoryItem"
+                        entityId: "inv-112"
+                        correlationId: "550e8400-e29b-41d4-a718"
+                    count: 2
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /audit/search:
+    get:
+      tags: [Audit]
+      summary: Search audit events with criteria
+      parameters:
+        - name: action
+          in: query
+          required: false
+          schema: { type: string }
+        - name: entityType
+          in: query
+          required: false
+          schema: { type: string }
+        - name: startDate
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+        - name: endDate
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
       responses:
         "200":
           description: audit events
           content:
             application/json:
               schema:
-                type: array
-                items: { $ref: "#/components/schemas/AuditEvent" }
+                type: object
+                properties:
+                  criteria:
+                    type: object
+                    properties:
+                      action: { type: string, nullable: true }
+                      entityType: { type: string, nullable: true }
+                      startDate: { type: string, format: date-time, nullable: true }
+                      endDate: { type: string, format: date-time, nullable: true }
+                  events:
+                    type: array
+                    items: { $ref: "#/components/schemas/AuditEvent" }
+                  count: { type: integer }
+              examples:
+                success:
+                  summary: Search results with date range
+                  value:
+                    criteria:
+                      action: "CREATE"
+                      entityType: "WorkOrder"
+                      startDate: "2026-02-25T00:00:00Z"
+                      endDate: "2026-02-27T23:59:59Z"
+                    events:
+                      - id: "evt-001"
+                        at: "2026-02-27T14:30:00Z"
+                        actorUserId: "user-123"
+                        action: "CREATE"
+                        entityType: "WorkOrder"
+                        entityId: "wo-456"
+                        correlationId: "550e8400-e29b-41d4-a716"
+                    count: 1
+        "400":
+          description: validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetails" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+
 
   /kpis/summary:
     get:
