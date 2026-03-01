@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { plansService } from '../domain/services/plans.service';
 import { validateBody, validateParams } from '../middleware/validate';
@@ -46,37 +46,79 @@ const updatePlanSchema = z
     message: 'At least one field must be provided.',
   });
 
-router.get('/plans', (_req: Request, res: Response) => {
-  res.json(plansService.listPlans());
+/** GET /plans: list all plans. */
+router.get('/plans', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const plans = await plansService.listPlans();
+    res.json(plans);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.get('/plans/:id', validateParams(planIdParamsSchema), (req: Request, res: Response) => {
-  res.json(plansService.getPlanById(req.params.id));
+/** GET /plans/:id: get plan by id. */
+router.get('/plans/:id', validateParams(planIdParamsSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const plan = await plansService.getPlanById(req.params.id);
+    res.json(plan);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.post('/plans', validateBody(createPlanSchema), (req: Request, res: Response) => {
-  const created = plansService.createPlan(req.body);
-  res.status(201).json(created);
+/** POST /plans: create plan. */
+router.post('/plans', validateBody(createPlanSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const created = await plansService.createPlan(req.body);
+    res.status(201).json(created);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.patch('/plans/:id', validateParams(planIdParamsSchema), validateBody(updatePlanSchema), (req: Request, res: Response) => {
-  const updated = plansService.updatePlan(req.params.id, req.body);
-  res.json(updated);
+/** PATCH /plans/:id: update plan. */
+router.patch(
+  '/plans/:id',
+  validateParams(planIdParamsSchema),
+  validateBody(updatePlanSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const updated = await plansService.updatePlan(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+/** PATCH /plans/:id/activate: set plan active. */
+router.patch('/plans/:id/activate', validateParams(planIdParamsSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const updated = await plansService.activatePlan(req.params.id);
+    res.json(updated);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.patch('/plans/:id/activate', validateParams(planIdParamsSchema), (req: Request, res: Response) => {
-  const updated = plansService.activatePlan(req.params.id);
-  res.json(updated);
+/** PATCH /plans/:id/deactivate: set plan inactive. */
+router.patch('/plans/:id/deactivate', validateParams(planIdParamsSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const updated = await plansService.deactivatePlan(req.params.id);
+    res.json(updated);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.patch('/plans/:id/deactivate', validateParams(planIdParamsSchema), (req: Request, res: Response) => {
-  const updated = plansService.deactivatePlan(req.params.id);
-  res.json(updated);
-});
-
-router.delete('/plans/:id', validateParams(planIdParamsSchema), (req: Request, res: Response) => {
-  plansService.deletePlan(req.params.id);
-  res.status(204).send();
+/** DELETE /plans/:id: delete plan. */
+router.delete('/plans/:id', validateParams(planIdParamsSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await plansService.deletePlan(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

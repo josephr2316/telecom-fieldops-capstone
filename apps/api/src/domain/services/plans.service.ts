@@ -9,55 +9,42 @@ import {
 const notFoundError = (id: string) =>
   new ApiError(404, 'Not Found', `No existe plan con id ${id}`, 'urn:telecom:error:plan-not-found');
 
+/** Plans service: list, get by id, create, update, activate, deactivate, delete. All methods async. */
 export const plansService = {
-  listPlans(): Plan[] {
+  async listPlans(): Promise<Plan[]> {
     return plansRepository.listAll();
   },
 
-  getPlanById(id: string): Plan {
-    const plan = plansRepository.findById(id);
-    if (!plan) {
-      throw notFoundError(id);
-    }
-
+  async getPlanById(id: string): Promise<Plan> {
+    const plan = await plansRepository.findById(id);
+    if (!plan) throw notFoundError(id);
     return plan;
   },
 
-  createPlan(input: CreatePlanInput): Plan {
+  async createPlan(input: CreatePlanInput): Promise<Plan> {
     return plansRepository.create(input);
   },
 
-  updatePlan(id: string, input: UpdatePlanInput): Plan {
-    const updated = plansRepository.update(id, input);
-    if (!updated) {
-      throw notFoundError(id);
-    }
-
+  async updatePlan(id: string, input: UpdatePlanInput): Promise<Plan> {
+    const updated = await plansRepository.update(id, input);
+    if (!updated) throw notFoundError(id);
     return updated;
   },
 
-  activatePlan(id: string): Plan {
-    const updated = plansRepository.activate(id);
-    if (!updated) {
-      throw notFoundError(id);
-    }
-
+  async activatePlan(id: string): Promise<Plan> {
+    const updated = await plansRepository.activate(id);
+    if (!updated) throw notFoundError(id);
     return updated;
   },
 
-  deactivatePlan(id: string): Plan {
-    const updated = plansRepository.deactivate(id);
-    if (!updated) {
-      throw notFoundError(id);
-    }
-
+  async deactivatePlan(id: string): Promise<Plan> {
+    const updated = await plansRepository.deactivate(id);
+    if (!updated) throw notFoundError(id);
     return updated;
   },
 
-  deletePlan(id: string): void {
-    const deleted = plansRepository.delete(id);
-    if (!deleted) {
-      throw notFoundError(id);
-    }
+  async deletePlan(id: string): Promise<void> {
+    const deleted = await plansRepository.delete(id);
+    if (!deleted) throw notFoundError(id);
   },
 };
