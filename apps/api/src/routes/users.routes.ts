@@ -32,34 +32,52 @@ const updateUserSchema = z
 
 router.use(authenticate);
 
-router.get('/', requirePermissions(['users:read']), (req, res) => {
-  const users = userService.listUsers();
-  res.status(200).json(users);
-
-  logger.info('Users listed', {
-    correlationId: req.correlationId,
-    userId: req.user?.id,
-    action: 'USERS_LIST',
-  });
-});
-
-router.post('/', createRateLimit, requirePermissions(['users:create']), validateBody(createUserSchema), (req, res, next) => {
+/** GET /: list users (public DTOs). */
+router.get('/', requirePermissions(['users:read']), async (req, res, next) => {
   try {
-    const created = userService.createUser(req.body);
-    res.status(201).json(created);
+    const users = await userService.listUsers();
+    res.status(200).json(users);
+
+    logger.info('Users listed', {
+      correlationId: req.correlationId,
+      userId: req.user?.id,
+      action: 'USERS_LIST',
+    });
   } catch (error) {
     next(error);
   }
 });
 
+/** POST /: create user. */
+router.post(
+  '/',
+  createRateLimit,
+  requirePermissions(['users:create']),
+  validateBody(createUserSchema),
+  async (req, res, next) => {
+    try {
+      const created = await userService.createUser(req.body);
+      res.status(201).json(created);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+/** PATCH /:id: update user. */
 router.patch(
   '/:id',
   requirePermissions(['users:update']),
   validateParams(userIdParamsSchema),
   validateBody(updateUserSchema),
-  (req, res, next) => {
+  async (req, res, next) => {
     try {
-      const updated = userService.updateUser(req.params.id, req.body, req.user!.id, req.correlationId);
+      const updated = await userService.updateUser(
+        req.params.id,
+        req.body,
+        req.user!.id,
+        req.correlationId,
+      );
       if (Array.isArray(req.body.roles)) {
         logger.info('Roles assigned', {
           correlationId: req.correlationId,
@@ -75,19 +93,25 @@ router.patch(
   },
 );
 
-router.post('/:id/block', requirePermissions(['users:block']), validateParams(userIdParamsSchema), (req, res, next) => {
-  try {
-    const blocked = userService.blockUser(req.params.id, req.user!.id, req.correlationId);
-    logger.info('User blocked', {
-      correlationId: req.correlationId,
-      userId: req.user?.id,
-      action: 'USERBLOCKED',
-      blockedUserId: req.params.id,
-    });
-    res.status(200).json(blocked);
-  } catch (error) {
-    next(error);
-  }
-});
+/** POST /:id/block: block user. */
+router.post(
+  '/:id/block',
+  requirePermissions(['users:block']),
+  validateParams(userIdParamsSchema),
+  async (req, res, next) => {
+    try {
+      const blocked = await userService.blockUser(req.params.id, req.user!.id, req.correlationId);
+      logger.info('User blocked', {
+        correlationId: req.correlationId,
+        userId: req.user?.id,
+        action: 'USERBLOCKED',
+        blockedUserId: req.params.id,
+      });
+      res.status(200).json(blocked);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 export default router;
