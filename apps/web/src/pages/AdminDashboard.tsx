@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../layouts/Layout";
 import PageNavigation from "../components/PageNavigation";
 import { apiClient } from "../services/apiClient";
 import { ApiError } from "../types/plans";
+import LoadingState from "../components/LoadingState";
 
 type Kpi = {
   label: string;
@@ -142,6 +143,7 @@ export default function AdminDashboardPage() {
   const [dashboardPayload, setDashboardPayload] = useState<DashboardKpiResponse | null>(null);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const selectedPeriod = useMemo(
     () => PERIOD_OPTIONS.find((option) => option.id === selectedPeriodId) ?? PERIOD_OPTIONS[1],
@@ -368,6 +370,7 @@ export default function AdminDashboardPage() {
 
   const loadDashboard = useCallback(async () => {
     setLoadError(null);
+    setIsLoading(true);
 
     try {
       const [kpiResponse, workOrdersResponse] = await Promise.all([
@@ -398,6 +401,8 @@ export default function AdminDashboardPage() {
       setLoadError(message);
       setDashboardPayload(null);
       setWorkOrders([]);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -511,6 +516,8 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           </header>
+
+          {isLoading ? <LoadingState label="Cargando dashboard operativo..." className="mb-6" /> : null}
 
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             {kpiData.length === 0 ? (
@@ -696,7 +703,7 @@ export default function AdminDashboardPage() {
             <div className="w-full max-w-xl bg-white border border-gray-200 rounded-sm p-6">
               <h3 className="text-2xl font-semibold text-gray-800">Alertas operativas</h3>
               <p className="text-sm text-gray-600 mt-1">
-                Se�ales detectadas a partir de ordenes reales del filtro actual.
+                Señales detectadas a partir de ordenes reales del filtro actual.
               </p>
 
               <div className="mt-6 space-y-3">
@@ -724,3 +731,5 @@ export default function AdminDashboardPage() {
     </Layout>
   );
 }
+
+

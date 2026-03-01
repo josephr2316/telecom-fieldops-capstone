@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { apiClient } from "../services/apiClient";
 import Layout from "../layouts/Layout";
 import PageNavigation from "../components/PageNavigation";
+import StatusBanner from "../components/StatusBanner";
+import LoadingState from "../components/LoadingState";
 
 type WorkOrderItem = {
   productId: string;
@@ -162,12 +164,20 @@ export default function WorkOrdersPage() {
             </button>
           </section>
 
-          {message && <div className="bg-white border border-gray-200 rounded-sm p-4 text-sm text-gray-700 mb-6">{message}</div>}
+          {message && (
+            <StatusBanner
+              tone="error"
+              title="Error en ordenes de trabajo"
+              message={message}
+              className="mb-6"
+              role="alert"
+            />
+          )}
 
           <section className="bg-white border border-gray-200 rounded-sm p-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Lista de ordenes</h2>
             {loading ? (
-              <p className="text-sm text-gray-600">Cargando...</p>
+              <LoadingState label="Cargando ordenes de trabajo..." />
             ) : orders.length === 0 ? (
               <p className="text-sm text-gray-600">No hay ordenes creadas.</p>
             ) : (

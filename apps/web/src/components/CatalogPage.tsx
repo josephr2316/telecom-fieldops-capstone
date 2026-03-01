@@ -5,6 +5,7 @@ import { PlanFormModal } from "./PlanFormModal";
 import { ProductFormModal } from "./ProductFormModal";
 import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 import Layout from "../layouts/Layout";
+import LoadingState from "./LoadingState";
 
 type Tab = "plans" | "products";
 
@@ -170,7 +171,7 @@ export function CatalogPage() {
                   </div>
                 )}
                 {plans.loading ? (
-                  <p className="text-sm text-gray-600">Cargando planes...</p>
+                  <LoadingState label="Cargando planes..." />
                 ) : plans.items.length === 0 ? (
                   <p className="text-sm text-gray-600">No hay planes registrados.</p>
                 ) : (
@@ -230,7 +231,7 @@ export function CatalogPage() {
                   </div>
                 )}
                 {products.loading ? (
-                  <p className="text-sm text-gray-600">Cargando productos...</p>
+                  <LoadingState label="Cargando productos..." />
                 ) : products.items.length === 0 ? (
                   <p className="text-sm text-gray-600">No hay productos registrados.</p>
                 ) : (

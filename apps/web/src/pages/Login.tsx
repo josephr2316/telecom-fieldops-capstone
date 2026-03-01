@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../services/apiClient";
 import { ApiError } from "../types/plans";
+import StatusBanner from "../components/StatusBanner";
 
 interface LoginResponse {
   accessToken: string;
@@ -76,7 +77,7 @@ function LoginPage() {
         </header>
 
         <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-sm p-6 flex flex-col gap-4">
-          {error && <div role="alert" className="border border-gray-200 rounded-sm p-3 text-sm text-gray-700">{error}</div>}
+          {error && <StatusBanner tone="error" role="alert" title="No se pudo iniciar sesion" message={error} />}
 
           <label className="flex flex-col gap-2">
             <span className="text-sm text-gray-700">Correo electronico</span>
