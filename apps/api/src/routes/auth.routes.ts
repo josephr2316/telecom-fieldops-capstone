@@ -17,10 +17,11 @@ const refreshSchema = z.object({
 export function authRouter() {
   const router = Router();
 
-  router.post('/login', loginRateLimit, validateBody(loginSchema), (req, res, next) => {
+  /** POST /login: authenticate with email/password, returns tokens and user. */
+  router.post('/login', loginRateLimit, validateBody(loginSchema), async (req, res, next) => {
     try {
       const { email, password } = req.body;
-      const response = authService.login(email, password, req.correlationId);
+      const response = await authService.login(email, password, req.correlationId);
 
       logger.info('User logged in', {
         correlationId: req.correlationId,
@@ -34,20 +35,22 @@ export function authRouter() {
     }
   });
 
-  router.post('/refresh', validateBody(refreshSchema), (req, res, next) => {
+  /** POST /refresh: rotate refresh token, returns new access + refresh tokens. */
+  router.post('/refresh', validateBody(refreshSchema), async (req, res, next) => {
     try {
       const { refreshToken } = req.body;
-      const response = authService.refresh(refreshToken);
+      const response = await authService.refresh(refreshToken);
       res.status(200).json(response);
     } catch (error) {
       next(error);
     }
   });
 
-  router.post('/logout', validateBody(refreshSchema), (req, res, next) => {
+  /** POST /logout: revoke refresh token and record audit event. */
+  router.post('/logout', validateBody(refreshSchema), async (req, res, next) => {
     try {
       const { refreshToken } = req.body;
-      authService.logout(refreshToken, req.user?.id ?? null, req.correlationId);
+      await authService.logout(refreshToken, req.user?.id ?? null, req.correlationId);
 
       logger.info('User logged out', {
         correlationId: req.correlationId,
