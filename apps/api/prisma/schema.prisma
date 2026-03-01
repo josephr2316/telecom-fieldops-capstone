@@ -109,11 +109,29 @@ model Inventory {
   @@map("inventory")
 }
 
+model WorkOrder {
+  id                 String   @id
+  type               String   @map("type")
+  status             String   @map("status")
+  customerId         String   @map("customer_id")
+  branchId           String?  @map("branch_id")
+  planId             String?  @map("plan_id")
+  assignedTechUserId String?  @map("assigned_tech_user_id")
+  version            Int      @default(0)
+  items              Json     @default("[]")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  reservation        Reservation?
+
+  @@map("work_orders")
+}
+
 model Reservation {
-  workOrderId String   @id @map("work_order_id")
-  branchId    String   @map("branch_id")
-  items       Json     @default("[]")
-  reservedAt  DateTime @default(now()) @map("reserved_at")
+  workOrderId String     @id @map("work_order_id")
+  branchId    String     @map("branch_id")
+  items       Json       @default("[]")
+  reservedAt  DateTime   @default(now()) @map("reserved_at")
+  workOrder   WorkOrder  @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
 
   @@map("reservations")
 }
