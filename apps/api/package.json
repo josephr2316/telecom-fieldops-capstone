@@ -11,6 +11,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "migrate": "npx prisma migrate deploy",
     "migrate:diff": "npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script",
+    "seed:work-orders": "npx ts-node --transpile-only -r dotenv/config scripts/seed-work-orders.ts",
     "openapi:validate": "node ../../scripts/validate-openapi.js src/openapi/openapi.yaml",
     "test": "jest --runInBand",
     "test:watch": "jest --watch"
