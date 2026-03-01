@@ -15,13 +15,25 @@ function loadOpenApiSpec(): object {
     path.join(__dirname, '..', 'openapi', 'openapi.yaml'),
     path.join(process.cwd(), 'src', 'openapi', 'openapi.yaml'),
   ];
+  let spec: Record<string, unknown> = {};
   for (const p of possiblePaths) {
     if (fs.existsSync(p)) {
       const raw = fs.readFileSync(p, 'utf8');
-      return yaml.load(raw) as object;
+      spec = (yaml.load(raw) as Record<string, unknown>) || {};
+      break;
     }
   }
-  return { openapi: '3.1.0', info: { title: 'Telecom FieldOps API', version: '1.0.0' }, paths: {} };
+  if (!spec.openapi) {
+    spec = { openapi: '3.1.0', info: { title: 'Telecom FieldOps API', version: '1.0.0' }, paths: {} };
+  }
+  // Servers para "Try it out": si hay API_PUBLIC_URL (producción) usarla; si no, misma origen (/api/v1) para que funcione en local y prod sin config
+  const baseUrl = process.env.API_PUBLIC_URL;
+  if (baseUrl && typeof baseUrl === 'string') {
+    spec.servers = [{ url: baseUrl.replace(/\/$/, '') + '/api/v1' }];
+  } else {
+    spec.servers = [{ url: '/api/v1' }];
+  }
+  return spec;
 }
 
 export function createApp() {

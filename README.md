@@ -44,6 +44,32 @@ npm run dev
 
 En producción la URL es: **https://telecom-fieldops-capstone-production.up.railway.app/api-docs**
 
+Por defecto Swagger usa la misma origen (`/api/v1`), así que "Try it out" llama al mismo host (local o Railway) y no a localhost. Opcional: en Railway puedes definir **`API_PUBLIC_URL`** = `https://telecom-fieldops-capstone-production.up.railway.app` si quieres una URL absoluta en el spec.
+
+### Despliegue en Railway (evitar "Login request failed" / "Unhandled error")
+
+En el proyecto de Railway configura estas **variables de entorno**:
+
+| Variable | Obligatoria | Descripción |
+|----------|-------------|-------------|
+| **DATABASE_URL** | Sí | URL de PostgreSQL. **Supabase (pooler):** pega la URI del "Transaction pooler" (puerto 6543); la app añade `pgbouncer=true` si falta (necesario para evitar 500 con el pooler). |
+| **JWT_ACCESS_SECRET** | Sí | Secreto para access tokens (ej: una frase larga o `openssl rand -hex 32`) |
+| **JWT_REFRESH_SECRET** | Sí | Secreto para refresh tokens (diferente al anterior) |
+| JWT_ISSUER | No | Por defecto `telecom-fieldops-api` |
+| JWT_AUDIENCE | No | Por defecto `telecom-fieldops-clients` |
+| NODE_ENV | No | `production` en Railway |
+
+**Primera vez (o si la base está vacía):** después del deploy, ejecuta en Railway (o desde tu máquina con la misma `DATABASE_URL`) desde `apps/api`:
+
+```bash
+npm run migrate
+npm run seed
+```
+
+Si no ejecutas migrate, las tablas no existen y el login devuelve 500. Si no ejecutas seed, no habrá usuario `admin@telecom.local` (401 en vez de 500). **Error 500 con Supabase pooler (6543):** el pooler en modo transacción no admite prepared statements; la app detecta URLs de `pooler.supabase.com:6543` y añade `pgbouncer=true` automáticamente si no está.
+
+En los logs de Railway deberías ver "Database connection OK" al arrancar; si ves "Database ping failed at startup", revisa `DATABASE_URL`. Si el login sigue fallando, en el log aparecerá el mensaje de error real (error, errorName, code) para diagnosticar.
+
 ## Base de datos y Prisma (Supabase)
 
 La API usa **Prisma** con PostgreSQL (Supabase). La base de datos se llama **capstone**.
@@ -65,10 +91,8 @@ El proyecto ya tiene el schema y la migración inicial que crea todas las tablas
 
 1. **Variables de entorno**  
    Copia `apps/api/.env.example` a `apps/api/.env` y rellena con tu proyecto Supabase:
-   - **`DATABASE_URL`**: pooler (puerto 6543), nombre de base **capstone**.
-   - **`DIRECT_URL`**: conexión directa (puerto 5432), mismo nombre de base **capstone**.  
-   Las dos URLs deben apuntar a la **misma base (capstone)** para que las migraciones se apliquen donde la app lee/escribe.  
-   Opcional: **`SHADOW_DATABASE_URL`** apunta a **otra base** (p. ej. `store`). Esa base solo la usa `prisma migrate dev` como copia temporal; la app y `npm run migrate` siguen usando **capstone** (DIRECT_URL y DATABASE_URL). Por eso hay dos URLs y dos bases: una es la base real (capstone), la otra es solo para el comando migrate dev.  
+   - **`DATABASE_URL`**: conexión a la base **capstone** (pooler Supabase puerto 6543 o conexión directa; la app y las migraciones usan solo esta URL).
+   Opcional: **`SHADOW_DATABASE_URL`** para `prisma migrate dev` (otra base temporal); la app y `npm run migrate` usan solo **capstone** vía `DATABASE_URL`.
    El `.env` no se sube al repositorio (está en `.gitignore`).
 
 2. **Aplicar migraciones (crear las tablas por primera vez)**  
@@ -76,7 +100,7 @@ El proyecto ya tiene el schema y la migración inicial que crea todas las tablas
    ```bash
    npm run migrate
    ```
-   Ejecuta el SQL de `prisma/migrations/` contra la base **capstone** usando `DIRECT_URL`. Las tablas (roles, users, plans, products, branches, inventory, etc.) se crean aquí.
+   Ejecuta el SQL de `prisma/migrations/` contra la base **capstone** usando `DATABASE_URL`. Las tablas (roles, users, plans, products, branches, inventory, etc.) se crean aquí.
 
 3. **Generar el cliente Prisma**  
    Desde `apps/api`:
@@ -117,7 +141,7 @@ Prisma crea la carpeta en `prisma/migrations/` con el `migration.sql` y lo aplic
 
 ### Estado de la conexión
 
-- **Listo:** `.env` con `DATABASE_URL` y `DIRECT_URL` apuntando a la base **capstone**, migraciones aplicadas, `npx prisma generate` ejecutado. Las tablas existen en capstone y el cliente está en `src/generated/prisma`. Las migraciones seguirán funcionando mientras ambas URLs usen el mismo nombre de base (capstone).
+- **Listo:** `.env` con `DATABASE_URL` apuntando a la base **capstone**, migraciones aplicadas, `npx prisma generate` ejecutado. Las tablas existen en capstone y el cliente está en `src/generated/prisma`.
 - **Pendiente en código:** Los repositorios siguen usando memoria (`getDb()`). Para usar la base real hay que usar `PrismaClient` con `DATABASE_URL` en esos repositorios.
 
 ## Cómo correr tests

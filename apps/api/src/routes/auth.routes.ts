@@ -31,15 +31,18 @@ export function authRouter() {
 
       res.status(200).json(response);
     } catch (error) {
-      logger.error(
-        {
-          correlationId: req.correlationId,
-          path: req.path,
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-        },
-        'Login request failed',
-      );
+      const err = error instanceof Error ? error : new Error(String(error));
+      const errPayload: Record<string, unknown> = {
+        correlationId: req.correlationId,
+        path: req.path,
+        error: err.message,
+        errorName: err.name,
+        stack: err.stack,
+      };
+      if (error && typeof (error as { code?: string }).code === 'string') {
+        errPayload.code = (error as { code: string }).code;
+      }
+      logger.error(errPayload, 'Login request failed');
       next(error);
     }
   });

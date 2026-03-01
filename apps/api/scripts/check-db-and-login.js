@@ -4,13 +4,11 @@
  */
 require('dotenv/config');
 
-const hasDb = !!(process.env.DATABASE_URL || process.env.DIRECT_URL);
-console.log('DATABASE_URL definida:', !!process.env.DATABASE_URL);
-console.log('DIRECT_URL definida:', !!process.env.DIRECT_URL);
-if (!hasDb) {
-  console.error('Falta DATABASE_URL o DIRECT_URL en .env');
+if (!process.env.DATABASE_URL) {
+  console.error('Falta DATABASE_URL en .env');
   process.exit(1);
 }
+console.log('DATABASE_URL definida: OK');
 
 async function main() {
   let prisma;

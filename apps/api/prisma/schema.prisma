@@ -9,7 +9,7 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-// In Prisma 7 the connection URLs (DATABASE_URL, DIRECT_URL) are set in prisma.config.ts, not here.
+// In Prisma 7 the connection URL (DATABASE_URL) is set in prisma.config.ts, not here.
 datasource db {
   provider = "postgresql"
 }
