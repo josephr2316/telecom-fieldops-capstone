@@ -388,11 +388,25 @@ export default function AdminDashboardPage() {
           message = "Sesion expirada o no autorizado. Inicia sesion de nuevo.";
         } else if (error.status === 403) {
           message = "No tienes permisos para leer KPIs o work orders.";
+        } else if (error.status === 502 || error.status === 500) {
+          message =
+            "La API no responde correctamente (error del servidor). Comprueba que la API este en marcha y que las migraciones esten aplicadas en produccion (Release Command: npm run release).";
         } else {
           message = error.message;
         }
       } else {
-        message = error instanceof Error ? error.message : "No se pudo cargar dashboard desde API.";
+        const rawMessage = error instanceof Error ? error.message : "";
+        const isNetworkError =
+          rawMessage === "Failed to fetch" ||
+          rawMessage.toLowerCase().includes("network") ||
+          rawMessage.toLowerCase().includes("cors") ||
+          (error instanceof TypeError && rawMessage.includes("fetch"));
+        if (isNetworkError) {
+          message =
+            "No se pudo conectar con la API (red, CORS o API caida). Comprueba que la API este en marcha, que VITE_API_URL sea correcta y que en produccion las migraciones esten aplicadas (Release Command: npm run release).";
+        } else {
+          message = rawMessage || "No se pudo cargar el dashboard desde la API.";
+        }
       }
 
       setLoadError(message);
