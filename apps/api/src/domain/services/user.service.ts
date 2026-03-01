@@ -76,7 +76,7 @@ export const userService = {
       blocked: false,
     });
 
-    auditService.record({
+    await auditService.record({
       actorUserId,
       action: AUDIT_ACTIONS.USER_CREATED,
       entityType: 'user',

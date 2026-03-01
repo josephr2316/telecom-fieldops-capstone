@@ -59,7 +59,10 @@ export function createApp() {
     }),
   );
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({ 
+  limit: '1mb',
+    type: ['application/json', 'application/json; charset=utf-8', 'application/json; charset=UTF-8'] 
+  }));
   app.use(correlationId());
   app.use(sanitizeResponseMiddleware);
 

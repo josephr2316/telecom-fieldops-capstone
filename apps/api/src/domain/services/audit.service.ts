@@ -11,7 +11,7 @@ interface ListOptions {
 }
 
 class AuditService {
-  record(input: {
+  async record(input: {
     actorUserId: string | null;
     action: AuditAction | string;
     entityType: string;
@@ -19,8 +19,8 @@ class AuditService {
     before: Record<string, unknown> | null;
     after: Record<string, unknown> | null;
     correlationId: string;
-  }): void {
-    auditRepository.insert({
+  }): Promise<void> {
+    await auditRepository.insert({
       id: `aud-${uuidv4()}`,
       at: new Date().toISOString(),
       ...input,

@@ -70,71 +70,40 @@ export function auditRouter() {
 
   /** GET /search: search by action, entityType, and optional date range. */
   router.get('/search', async (req, res, next) => {
-    const { action, entityType, startDate, endDate, limit = 50 } = req.query;
+    const { action, entityType, limit = 50 } = req.query;
 
     try {
-      let events = (
-        await auditService.list({
-          action: action as string | undefined,
-          entityType: entityType as string | undefined,
-          limit: Math.min(Number(limit), 100),
-        })
-      ).items;
-
-      if (startDate || endDate) {
-        const start = startDate ? new Date(startDate as string) : new Date(0);
-        const end = endDate ? new Date(endDate as string) : new Date();
-
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-          throw new AppError({
-            status: 400,
-            title: 'Bad Request',
-            detail: 'Invalid date format. Use ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ).',
-            type: 'urn:telecom:error:validation',
-          });
-        }
-
-        events = await auditService.getByDateRange(start, end);
-      }
-
+      const { items } = await auditService.list({
+        action: action as string,
+        entityType: entityType as string,
+        limit: Math.min(Number(limit), 100),
+      });
+      
+      res.status(200).json({
+        criteria: { action: action || null, entityType: entityType || null },
+        events: items,
+        count: items.length,
+      });
       logger.info(
         {
           ...baseReqLog(req),
-          filters: { action, entityType, startDate, endDate },
-          resultCount: events.length,
+          filters: { action, entityType },
+          resultCount: items.length,
         },
         'Audit search performed',
       );
-
-      res.status(200).json({
-        criteria: {
-          action: action || null,
-          entityType: entityType || null,
-          startDate: startDate || null,
-          endDate: endDate || null,
-        },
-        events,
-        count: events.length,
-      });
     } catch (err) {
-      if (err instanceof AppError) throw err;
-      logger.error(
-        {
-          ...baseReqLog(req),
-          error: err instanceof Error ? err.message : err,
-        },
-        'Error in audit search',
-      );
       next(err);
     }
   });
-
+      
   /** GET /:auditId: get a single audit event by id. */
   router.get('/:auditId', async (req, res, next) => {
     const { auditId } = req.params;
 
     try {
-      const event = await auditService.getById(auditId);
+      const { items } = await auditService.list({ limit: 1 });
+      const event = items.find(i => (i as any).id === auditId);
 
       if (!event) {
         throw new AppError({
@@ -203,17 +172,19 @@ export function auditRouter() {
     const limit = Math.min(Math.max(limitQuery, 1), 1000);
 
     try {
-      const events = await auditService.getByUser(userId, limit);
+      const { items } = await auditService.list({ limit});
+
+      const userEvents = items.filter(i => (i as any).actorUserId === userId);
 
       logger.info(
-        { ...baseReqLog(req), userId, eventCount: events.length },
+        { ...baseReqLog(req), userId, eventCount: userEvents.length },
         'User audit events retrieved',
       );
 
       res.status(200).json({
         user: userId,
-        events,
-        count: events.length,
+        events: userEvents,
+        eventCount: userEvents.length,
       });
     } catch (err) {
       logger.error(
@@ -230,3 +201,60 @@ export function auditRouter() {
 
   return router;
 }
+
+
+// let events = (
+//         await auditService.list({
+//           action: action as string | undefined,
+//           entityType: entityType as string | undefined,
+//           limit: Math.min(Number(limit), 100),
+//         })
+//       ).items;
+
+//       if (startDate || endDate) {
+//         const start = startDate ? new Date(startDate as string) : new Date(0);
+//         const end = endDate ? new Date(endDate as string) : new Date();
+
+//         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+//           throw new AppError({
+//             status: 400,
+//             title: 'Bad Request',
+//             detail: 'Invalid date format. Use ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ).',
+//             type: 'urn:telecom:error:validation',
+//           });
+//         }
+
+//         events = await auditService.getByDateRange(start, end);
+//       }
+
+//       logger.info(
+//         {
+//           ...baseReqLog(req),
+//           filters: { action, entityType, startDate, endDate },
+//           resultCount: events.length,
+//         },
+//         'Audit search performed',
+//       );
+
+//       res.status(200).json({
+//         criteria: {
+//           action: action || null,
+//           entityType: entityType || null,
+//           startDate: startDate || null,
+//           endDate: endDate || null,
+//         },
+//         events,
+//         count: events.length,
+//       });
+//     } catch (err) {
+//       if (err instanceof AppError) throw err;
+//       logger.error(
+//         {
+//           ...baseReqLog(req),
+//           error: err instanceof Error ? err.message : err,
+//         },
+//         'Error in audit search',
+//       );
+//       next(err);
+//     }
+//   });
