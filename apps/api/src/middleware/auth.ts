@@ -3,6 +3,7 @@ import { authService } from '../domain/services/auth.service';
 import { ApiError } from '../domain/errors/apiError';
 import { userRepository } from '../infra/repositories/user.repo';
 
+/** Extracts Bearer token from Authorization header or throws 401. */
 const extractBearerToken = (req: Request): string => {
   const header = req.headers.authorization;
   if (!header) {
@@ -17,11 +18,15 @@ const extractBearerToken = (req: Request): string => {
   return token;
 };
 
-export const authenticate = (req: Request, _res: Response, next: NextFunction): void => {
+/**
+ * Middleware: authenticates request via Bearer token, loads user and permissions from DB, attaches to req.user.
+ * Must be async to await userRepository (Prisma).
+ */
+export const authenticate = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
   try {
     const token = extractBearerToken(req);
     const claims = authService.verifyAccessToken(token);
-    const user = userRepository.findById(claims.userId);
+    const user = await userRepository.findById(claims.userId);
 
     if (!user) {
       throw new ApiError(401, 'Unauthorized', 'Invalid token subject.', 'urn:telecom:error:invalid-token');
@@ -31,7 +36,7 @@ export const authenticate = (req: Request, _res: Response, next: NextFunction): 
       throw new ApiError(403, 'Forbidden', 'User is blocked.', 'urn:telecom:error:user-blocked');
     }
 
-    const currentPermissions = userRepository.getPermissionKeysForRoles(user.roles);
+    const currentPermissions = await userRepository.getPermissionKeysForRoles(user.roles);
 
     req.user = {
       id: user.id,
@@ -48,6 +53,7 @@ export const authenticate = (req: Request, _res: Response, next: NextFunction): 
   }
 };
 
+/** Returns the authenticate middleware for use in router.use() or route handlers. */
 export function auth() {
   return authenticate;
 }
