@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "../services/apiClient";
+import { ApiError } from "../types/plans";
 
 interface LoginResponse {
   accessToken: string;
@@ -45,7 +46,14 @@ function LoginPage() {
 
       navigate("/home");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al iniciar sesion.");
+      if (err instanceof ApiError && err.body?.detail) {
+        setError(err.body.detail);
+      } else if (err instanceof Error) {
+        const msg = err.message || "Error al iniciar sesion.";
+        setError(msg.includes("fetch") || msg.includes("Network") ? "No se pudo conectar con el servidor. Revisa que VITE_API_URL apunte a la API y que CORS permita este origen." : msg);
+      } else {
+        setError("Error al iniciar sesion.");
+      }
     } finally {
       setLoading(false);
     }

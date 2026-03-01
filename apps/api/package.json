@@ -8,6 +8,7 @@
     "build": "node node_modules/typescript/bin/tsc -p tsconfig.json && node -e \"require('fs').cpSync('src/generated', 'dist/generated', {recursive: true})\"",
     "postinstall": "prisma generate",
     "start": "node dist/main.js",
+    "release": "npx prisma migrate deploy",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "migrate": "npx prisma migrate deploy",
     "migrate:diff": "npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script",
