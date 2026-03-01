@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import InventoryTable from "../components/InventoryTable";
 import { apiClient } from "../services/apiClient";
 import Layout from "../layouts/Layout";
+import PageNavigation from "../components/PageNavigation";
 
 type Branch = {
   id: string;
@@ -63,6 +64,7 @@ export default function InventoryPage() {
     <Layout>
       <div className="min-h-screen bg-gray-100 py-10">
         <div className="max-w-6xl mx-auto px-6 text-gray-800">
+          <PageNavigation />
           <header className="bg-white border border-gray-200 rounded-sm p-6 mb-6">
             <button onClick={() => navigate("/home")} className="text-sm text-gray-600 hover:text-gray-800 mb-3">
               Volver al panel principal
