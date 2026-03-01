@@ -19,6 +19,7 @@
     "node": ">=20.20.0"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.6",
