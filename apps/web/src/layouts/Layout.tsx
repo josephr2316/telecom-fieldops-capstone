@@ -41,7 +41,9 @@ const Layout = ({ children }: { children: ReactNode }) => {
           </div>
 
           <div className="flex items-center gap-3 text-sm text-gray-700">
-            <div className="w-9 h-9 bg-gray-300 rounded-full" />
+            <div className="w-9 h-9 bg-[#002D72] rounded-full">
+              <span className="flex items-center justify-center font-extrabold text-2xl text-white">{ userDisplay.name[0] }</span>
+            </div>
             <div>
               <p className="font-medium">{userDisplay.name}</p>
               <p className="text-xs text-gray-500">{userDisplay.role}</p>
