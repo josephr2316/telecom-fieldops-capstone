@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { ApiError } from '../domain/errors/apiError';
 
-const hasPermission = (granted: string[], required: string): boolean => {
+export const hasPermission = (granted: string[], required: string): boolean => {
   if (granted.includes('*')) {
     return true;
   }

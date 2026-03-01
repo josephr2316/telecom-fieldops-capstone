@@ -96,6 +96,7 @@
       "customerId": "cust_001",
       "branchId": "br_main",
       "planId": "plan_home_200",
+      "assignedTechUserId": "usr-tecnico-01",
       "version": 0,
       "items": [
         { "productId": "prod_router_ax", "qty": 1 },
@@ -118,6 +119,7 @@
       "customerId": "cust_002",
       "branchId": "br_east",
       "planId": "plan_mobile_20gb",
+      "assignedTechUserId": "usr-tecnico-01",
       "version": 1,
       "items": [{ "productId": "prod_sim_5g", "qty": 1 }],
       "technicianNotes": "Venta SIM 5G activada. Cliente recogió en ventanilla. Pendiente activación en red.",
@@ -135,9 +137,10 @@
       "status": "SCHEDULED",
       "customerId": "cust_003",
       "branchId": "br_main",
-      "assignedTechUserId": "usr_tech_07",
+      "planId": "plan_home_200",
+      "assignedTechUserId": "usr-tecnico-01",
       "version": 2,
-      "items": [],
+      "items": [ { "productId": "prod_cable_fiber_10m", "qty": 1 } ],
       "technicianNotes": "Cliente reporta falla de señal desde ayer. Revisión en poste y medición de niveles programada. Equipo de medición listo.",
       "checklist": [
         { "id": "1", "label": "Verificar equipo en sitio", "completed": true },

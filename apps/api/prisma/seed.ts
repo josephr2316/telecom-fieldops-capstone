@@ -48,6 +48,8 @@ const data = JSON.parse(raw) as {
     assignedTechUserId?: string;
     version: number;
     items: Array<{ productId: string; qty: number }>;
+    technicianNotes?: string;
+    checklist?: Array<{ id: string; label: string; completed: boolean }>;
   }>;
 };
 
@@ -181,9 +183,51 @@ async function main() {
   }
   console.log('  inventory:', inventory.length);
 
-  // 7) Work orders
+  // 7) Work orders: rellenar nulls, vacíos e inválidos con valores reales de seed-data.
+  // Solo son válidos: customer_id (cust_001,cust_002,cust_003), branch_id (br_main,br_east,br_west), plan_id (plan_*).
+  try {
+    await prisma.$executeRawUnsafe(`
+      UPDATE work_orders SET technician_notes = COALESCE(technician_notes, '') WHERE technician_notes IS NULL
+    `);
+    await prisma.$executeRawUnsafe(`
+      UPDATE work_orders SET technician_notes = 'Orden en proceso. Pendiente de notas del técnico.' WHERE TRIM(technician_notes) = ''
+    `);
+  } catch {}
+  try {
+    await prisma.$executeRawUnsafe(`
+      UPDATE work_orders SET checklist = COALESCE(checklist, '[]'::jsonb) WHERE checklist IS NULL
+    `);
+    await prisma.$executeRawUnsafe(`
+      UPDATE work_orders SET checklist = '[{"id":"1","label":"Verificar equipo en sitio","completed":false},{"id":"2","label":"Comprobar señal","completed":false},{"id":"3","label":"Documentar resultado","completed":false}]'::jsonb WHERE checklist = '[]'::jsonb OR jsonb_array_length(checklist) = 0
+    `);
+  } catch {}
+  try {
+    await prisma.$executeRawUnsafe(`
+      UPDATE work_orders SET items = COALESCE(items, '[]'::jsonb) WHERE items IS NULL
+    `);
+    await prisma.$executeRawUnsafe(`
+      UPDATE work_orders SET items = '[{"productId":"prod_router_ax","qty":1}]'::jsonb WHERE items = '[]'::jsonb OR jsonb_array_length(items) = 0
+    `);
+    await prisma.$executeRawUnsafe(`
+      UPDATE work_orders SET assigned_tech_user_id = 'usr-tecnico-01' WHERE assigned_tech_user_id IS NULL OR assigned_tech_user_id NOT IN ('usr-admin-01','usr-tecnico-01','usr-supervisor-01','usr-ventas-01','usr-security-01')
+    `);
+    await prisma.$executeRawUnsafe(`
+      UPDATE work_orders SET customer_id = 'cust_001' WHERE customer_id IS NULL OR TRIM(customer_id) = '' OR customer_id NOT IN ('cust_001','cust_002','cust_003')
+    `);
+    await prisma.$executeRawUnsafe(`
+      UPDATE work_orders SET branch_id = 'br_main' WHERE branch_id IS NULL OR TRIM(branch_id) = '' OR branch_id NOT IN ('br_main','br_east','br_west')
+    `);
+    await prisma.$executeRawUnsafe(`
+      UPDATE work_orders SET plan_id = 'plan_home_200' WHERE plan_id IS NULL OR TRIM(plan_id) = '' OR plan_id NOT IN ('plan_home_200','plan_home_500','plan_mobile_20gb','plan_voice_600','plan_business_1g')
+    `);
+  } catch {}
+
+  // 8) Work orders (technicianNotes, checklist e items siempre con valor; nunca null)
   const workOrders = data.workOrders ?? [];
   for (const wo of workOrders) {
+    const notes = (wo.technicianNotes != null && wo.technicianNotes !== '') ? wo.technicianNotes : '';
+    const checklistData = Array.isArray(wo.checklist) ? (wo.checklist as object) : [];
+    const itemsData = Array.isArray(wo.items) ? (wo.items as object) : [];
     await prisma.workOrder.upsert({
       where: { id: wo.id },
       create: {
@@ -195,7 +239,9 @@ async function main() {
         planId: wo.planId ?? null,
         assignedTechUserId: wo.assignedTechUserId ?? null,
         version: wo.version ?? 0,
-        items: (wo.items ?? []) as object,
+        items: itemsData,
+        technicianNotes: notes,
+        checklist: checklistData,
       },
       update: {
         type: wo.type,
@@ -205,7 +251,9 @@ async function main() {
         planId: wo.planId ?? null,
         assignedTechUserId: wo.assignedTechUserId ?? null,
         version: wo.version ?? 0,
-        items: (wo.items ?? []) as object,
+        items: itemsData,
+        technicianNotes: notes,
+        checklist: checklistData,
       },
     });
   }

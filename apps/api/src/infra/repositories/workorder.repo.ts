@@ -92,6 +92,8 @@ export const workOrderRepository = {
         assignedTechUserId: null,
         version: 0,
         items: (input.items ?? []) as object,
+        technicianNotes: '',
+        checklist: [],
       },
     });
 
