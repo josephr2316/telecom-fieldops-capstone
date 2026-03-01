@@ -5,6 +5,7 @@ import { workOrderService } from '../domain/services/workorder.service';
 import { authenticate } from '../middleware/auth';
 import { requirePermissions, requireAnyPermission } from '../middleware/rbac';
 import { validateBody, validateParams } from '../middleware/validate';
+import { workOrderController } from '../presentation/controllers/workOrder.controller';
 
 const router = Router();
 
@@ -127,6 +128,9 @@ router.patch(
     }
   },
 );
+
+// additional endpoint for direct state transition with validation (controller method)
+router.patch("/:id/state", workOrderController.transitionState.bind(workOrderController));
 
 router.patch(
   '/:id/assign',
