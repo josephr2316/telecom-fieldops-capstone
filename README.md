@@ -1,6 +1,8 @@
 # telecom-fieldops-capstone
 This project is for student use
 
+Documento final de proyecto: `docs/17-final-project-guide.md`
+
 Proyecto: Telecom FieldOps Suite
 
 URL Web: https://telecom-fieldops-capstone.vercel.app/
@@ -193,3 +195,10 @@ Offline (LocalStorage + export/import): (pendiente)
 KPIs: (pendiente)
 Mapa Endpoint -> RF: (pendiente)
 Cómo hacer un PR: usar la plantilla en `.github/PULL_REQUEST_TMP.md` y rellenar objetivo, RF/RB, cambios, cómo probar..
+
+## Imagenes
+![Login](docs/assets/images/Cap1.png)
+![HomePagen](docs/assets/images/Cap2.png)
+![HomePagen](docs/assets/images/Cap3.png)
+![Dashboard KPIs](docs/assets/images/Cap4.png)
+![Dashboard KPIs](docs/assets/images/Cap5.png)

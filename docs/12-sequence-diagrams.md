@@ -1,56 +1,71 @@
+Diagramas de secuencia (minimo 2)
+
+1) Flujo principal: crear solicitud -> reservar inventario -> cambio de estado -> auditoria
+
+```mermaid
 sequenceDiagram
+    participant Sales as Ventas
+    participant Web as Frontend
+    participant API as API /api/v1
+    participant WO as WorkOrderService
+    participant INV as InventoryService
+    participant AUD as AuditService
 
-Crear work order + reservar inventario + auditoría
+    Sales->>Web: Completa formulario de solicitud
+    Web->>API: POST /work-orders (Bearer + X-Correlation-Id)
+    API->>WO: createWorkOrder(payload)
+    WO->>AUD: AUD-05 WORKORDER_CREATED
+    API-->>Web: 201 WorkOrder (status=DRAFT, version=0)
 
-  participant S as Sales
-  participant W as Web
-  participant API as API
-  participant INV as Inventory
-  participant AUD as Audit
+    Sales->>Web: Cambiar estado a INVENTORY_RESERVATION
+    Web->>API: PATCH /work-orders/{id}/status (newStatus, baseVersion)
+    API->>WO: updateStatus(id, payload)
+    WO->>WO: Validar transicion (state machine)
+    WO->>INV: reserveForRequest(workOrderId, branchId, items)
+    alt stock insuficiente
+        INV-->>WO: Error de negocio
+        WO-->>API: 409 ProblemDetails (stock_insufficient)
+        API-->>Web: 409 Conflict
+    else reserva exitosa
+        INV-->>WO: Reserva aplicada
+        WO->>AUD: AUD-06 WORKORDER_STATUS
+        WO-->>API: WorkOrder actualizado (version+1)
+        API-->>Web: 200 OK
+    end
+```
 
-  S->>W: Fill form and submit work order
-  W->>API: POST /work-orders (Bearer, correlationId)
-  API->>API: Validate input + RB
-  API->>AUD: Write WORK_ORDER_CREATED
-  API-->>W: 201 WorkOrder (SUBMITTED)
+2) Flujo tecnico offline: cola local -> export JSON -> import y conflictos por baseVersion
 
-  W->>API: PATCH /work-orders/{id}/status (INVENTORY_RESERVATION, baseVersion)
-  API->>API: Validate transition (state machine)
-  API->>INV: Reserve requested products (atomic)
-  alt Not enough stock
-    INV-->>API: Conflict
-    API->>AUD: Write INVENTORY_RESERVE_FAILED
-    API-->>W: 409 ProblemDetails
-  else Success
-    INV-->>API: Reserved
-    API->>AUD: Write INVENTORY_RESERVED
-    API-->>W: 200 WorkOrder updated
-  end
-----------------------------------------------------------------------------------------
+```mermaid
+sequenceDiagram
+    participant Tech as Tecnico
+    participant Web as Frontend (MyOrdersPage)
+    participant LS as LocalStorage
+    participant API as API /api/v1/sync/import
+    participant Sync as SyncService
+    participant WO as WorkOrderService
 
-Técnico offline + export/import + conflicto
+    Tech->>Web: Actualiza notas/checklist sin internet
+    Web->>LS: pushToOfflineQueue(PATCH_TECH_DETAILS)
 
-  sequenceDiagram
-  participant T as Technician
-  participant Web as Web Offline
-  participant LS as LocalStorage
-  participant API as API
-  participant AUD as Audit
+    Tech->>Web: Cambia estado sin internet
+    Web->>LS: pushToOfflineQueue(PATCH_STATUS + baseVersion)
 
-  T->>Web: Update status to VERIFICATION (offline)
-  Web->>LS: Push OfflineOperation (baseVersion=3)
+    Tech->>Web: Exportar cola offline
+    Web->>LS: getOfflineQueue()
+    Web-->>Tech: Archivo JSON (meta + items)
 
-  T->>Web: Export offline changes
-  Web->>LS: Read app.offline.queue
-  Web-->>T: Download JSON export
-
-  T->>Web: Import JSON (connected)
-  Web->>API: POST /sync/import (Bearer)
-  API->>API: Validate schema, apply ops with baseVersion checks
-  alt Version mismatch
-    API->>AUD: Write SYNC_IMPORTED with conflicts
-    API-->>Web: 200 {conflicts[]}
-  else Applied
-    API->>AUD: Write WORK_ORDER_STATUS_CHANGED
-    API-->>Web: 200 {appliedCount}
-  end
+    Tech->>Web: Importar JSON para sincronizar
+    Web->>API: POST /sync/import (meta + operations)
+    API->>Sync: import(body, actorUserId, correlationId)
+    Sync->>WO: validar existencia y version actual
+    alt baseVersion != version servidor
+        WO-->>Sync: conflicto
+        Sync-->>API: conflictCount + conflicts[]
+        API-->>Web: 200 OK con conflictos
+    else version valida
+        Sync->>WO: aplicar CHANGE_STATUS/ADD_NOTE
+        Sync-->>API: appliedCount
+        API-->>Web: 200 OK aplicado
+    end
+```
