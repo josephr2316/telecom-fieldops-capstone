@@ -44,7 +44,7 @@
   ],
   "authRoles": [
     { "id": "role-admin", "name": "admin", "permissionKeys": ["*"] },
-    { "id": "role-tecnico", "name": "tecnico", "permissionKeys": ["workorders:view-own", "workorders:update-state"] },
+    { "id": "role-tecnico", "name": "tecnico", "permissionKeys": ["workorders:view-own", "workorders:update-state", "sync:import"] },
     { "id": "role-supervisor", "name": "supervisor", "permissionKeys": ["workorders:*", "inventory:view"] },
     { "id": "role-ventas", "name": "ventas", "permissionKeys": ["workorders:create", "inventory:reserve"] },
     { "id": "role-security", "name": "security", "permissionKeys": ["audit:read", "users:read", "roles:read"] }
@@ -60,14 +60,14 @@
     {
       "id": "usr-tecnico-01",
       "email": "tecnico@telecom.local",
-      "passwordHash": "$2a$10$GMO310f9eSUAqFuX3L4AG.DkuPoXeoi6o3IDXaU4gwFBtOnroH4rC",
+      "passwordHash": "$2a$10$k.PDT6a38dWe8LL73MLTJe89SWelvdHulBOn/pSOnp6jKVIcK5yD2",
       "blocked": false,
       "roles": ["tecnico"]
     },
     {
       "id": "usr-supervisor-01",
       "email": "supervisor@telecom.local",
-      "passwordHash": "$2a$10$YpmaG9j4r/v3iF8yU9tWIeWjgt635ilCg/xSqwv0rQESrNRKCTAqO",
+      "passwordHash": "$2a$10$Zv4aZY3thBy809X/SRH1ReIgKaoTrOVNCbNxgp6mcvaKST6l14S2u",
       "blocked": false,
       "roles": ["supervisor"]
     },
@@ -81,7 +81,7 @@
     {
       "id": "usr-security-01",
       "email": "security@telecom.local",
-      "passwordHash": "$2a$10$0C9TEt02NqB54ENZTrG8Bec8U1yvEK09IcNonKDWCi9SJJOQdCDQe",
+      "passwordHash": "$2a$10$ryUOu85Kd450NpjggrE8xuzODmLQqVRt8tTt1Mg7dRI.o/GYvBgM2",
       "blocked": false,
       "roles": ["security"]
     }
@@ -140,7 +140,7 @@
       "planId": "plan_home_200",
       "assignedTechUserId": "usr-tecnico-01",
       "version": 2,
-      "items": [],
+      "items": [ { "productId": "prod_cable_fiber_10m", "qty": 1 } ],
       "technicianNotes": "Cliente reporta falla de señal desde ayer. Revisión en poste y medición de niveles programada. Equipo de medición listo.",
       "checklist": [
         { "id": "1", "label": "Verificar equipo en sitio", "completed": true },
