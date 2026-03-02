@@ -46,3 +46,37 @@ export function removeOfflineQueueItem(id: string): void {
   const queue = getOfflineQueue().filter((i) => i.id !== id);
   setOfflineQueue(queue);
 }
+
+/** RF-11: Export offline queue to JSON (ADR-0002 format: metadata + items). */
+export function exportOfflineQueueToJson(): string {
+  const queue = getOfflineQueue();
+  const payload = {
+    meta: {
+      deviceId: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 64) : 'unknown',
+      exportedAt: new Date().toISOString(),
+      appVersion: '1.0',
+    },
+    items: queue.map((item) => ({
+      tipo: item.op,
+      entidad: 'WORK_ORDER',
+      workOrderId: item.workOrderId,
+      operacion: item.op,
+      payload: item.payload,
+      timestamp: item.timestamp,
+      id: item.id,
+    })),
+  };
+  return JSON.stringify(payload, null, 2);
+}
+
+/** Trigger download of offline queue as a .json file. */
+export function downloadOfflineQueueAsJson(): void {
+  const json = exportOfflineQueueToJson();
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `offline-queue-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
