@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../services/apiClient";
 import { ApiError } from "../types/plans";
+import StatusBanner from "../components/StatusBanner";
 
 interface LoginResponse {
   accessToken: string;
@@ -20,12 +21,20 @@ interface LoginResponse {
 
 function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("session") === "expired") {
+      setError("Sesion expirada o no autorizada. Vuelve a iniciar sesion.");
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const canSubmit = email.trim().includes("@") && password.length >= 8 && !loading;
 
@@ -68,7 +77,7 @@ function LoginPage() {
         </header>
 
         <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-sm p-6 flex flex-col gap-4">
-          {error && <div role="alert" className="border border-gray-200 rounded-sm p-3 text-sm text-gray-700">{error}</div>}
+          {error && <StatusBanner tone="error" role="alert" title="No se pudo iniciar sesion" message={error} />}
 
           <label className="flex flex-col gap-2">
             <span className="text-sm text-gray-700">Correo electronico</span>

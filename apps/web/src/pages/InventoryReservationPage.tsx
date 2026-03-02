@@ -4,6 +4,8 @@ import InventoryTable from "../components/InventoryTable";
 import { apiClient } from "../services/apiClient";
 import Layout from "../layouts/Layout";
 import PageNavigation from "../components/PageNavigation";
+import StatusBanner from "../components/StatusBanner";
+import LoadingState from "../components/LoadingState";
 
 type Branch = {
   id: string;
@@ -27,16 +29,21 @@ export default function InventoryReservationPage() {
   const [selectedBranchId, setSelectedBranchId] = useState("");
   const [inventoryRows, setInventoryRows] = useState<InventoryRow[]>([]);
   const [message, setMessage] = useState("");
+  const [loadingBranches, setLoadingBranches] = useState(true);
+  const [loadingInventory, setLoadingInventory] = useState(false);
 
   useEffect(() => {
     const loadInitialData = async () => {
       try {
+        setLoadingBranches(true);
         const [branchRows] = await Promise.all([apiClient.get<Branch[]>("/api/v1/inventory/branches")]);
         setBranches(branchRows);
         const firstBranchId = branchRows[0]?.id ?? "";
         setSelectedBranchId(firstBranchId);
       } catch (error) {
         setMessage(error instanceof Error ? error.message : "Error cargando datos");
+      } finally {
+        setLoadingBranches(false);
       }
     };
 
@@ -50,12 +57,15 @@ export default function InventoryReservationPage() {
     }
     const loadInventory = async () => {
       try {
+        setLoadingInventory(true);
         const rows = await apiClient.get<InventoryRow[]>(
           `/api/v1/inventory?branchId=${encodeURIComponent(selectedBranchId)}`
         );
         setInventoryRows(rows);
       } catch (error) {
         setMessage(error instanceof Error ? error.message : "Error cargando inventario");
+      } finally {
+        setLoadingInventory(false);
       }
     };
 
@@ -81,6 +91,7 @@ export default function InventoryReservationPage() {
               <select
                 value={selectedBranchId}
                 onChange={(event) => setSelectedBranchId(event.target.value)}
+                disabled={loadingBranches}
                 className="mt-2 block w-full border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#002D72]"
               >
                 {branches.map((branch) => (
@@ -93,11 +104,21 @@ export default function InventoryReservationPage() {
           </section>
 
           {message ? (
-            <div className="bg-white border border-gray-200 rounded-sm p-4 text-sm text-gray-700 mb-6">{message}</div>
+            <StatusBanner
+              tone="error"
+              title="Error en reserva de inventario"
+              message={message}
+              className="mb-6"
+              role="alert"
+            />
           ) : null}
 
           <section className="bg-white border border-gray-200 rounded-sm p-6">
-            <InventoryTable rows={inventoryRows} />
+            {loadingBranches || loadingInventory ? (
+              <LoadingState label="Cargando disponibilidad por sucursal..." />
+            ) : (
+              <InventoryTable rows={inventoryRows} />
+            )}
           </section>
         </div>
       </div>

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../layouts/Layout";
 import PageNavigation from "../components/PageNavigation";
 import { apiClient } from "../services/apiClient";
 import { ApiError } from "../types/plans";
+import LoadingState from "../components/LoadingState";
 
 type Kpi = {
   label: string;
@@ -142,6 +143,7 @@ export default function AdminDashboardPage() {
   const [dashboardPayload, setDashboardPayload] = useState<DashboardKpiResponse | null>(null);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const selectedPeriod = useMemo(
     () => PERIOD_OPTIONS.find((option) => option.id === selectedPeriodId) ?? PERIOD_OPTIONS[1],
@@ -368,6 +370,7 @@ export default function AdminDashboardPage() {
 
   const loadDashboard = useCallback(async () => {
     setLoadError(null);
+    setIsLoading(true);
 
     try {
       const [kpiResponse, workOrdersResponse] = await Promise.all([
@@ -388,16 +391,32 @@ export default function AdminDashboardPage() {
           message = "Sesion expirada o no autorizado. Inicia sesion de nuevo.";
         } else if (error.status === 403) {
           message = "No tienes permisos para leer KPIs o work orders.";
+        } else if (error.status === 502 || error.status === 500) {
+          message =
+            "La API no responde correctamente (error del servidor). Comprueba que la API este en marcha y que las migraciones esten aplicadas en produccion (Release Command: npm run release).";
         } else {
           message = error.message;
         }
       } else {
-        message = error instanceof Error ? error.message : "No se pudo cargar dashboard desde API.";
+        const rawMessage = error instanceof Error ? error.message : "";
+        const isNetworkError =
+          rawMessage === "Failed to fetch" ||
+          rawMessage.toLowerCase().includes("network") ||
+          rawMessage.toLowerCase().includes("cors") ||
+          (error instanceof TypeError && rawMessage.includes("fetch"));
+        if (isNetworkError) {
+          message =
+            "No se pudo conectar con la API (red, CORS o API caida). Comprueba que la API este en marcha, que VITE_API_URL sea correcta y que en produccion las migraciones esten aplicadas (Release Command: npm run release).";
+        } else {
+          message = rawMessage || "No se pudo cargar el dashboard desde la API.";
+        }
       }
 
       setLoadError(message);
       setDashboardPayload(null);
       setWorkOrders([]);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -511,6 +530,8 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           </header>
+
+          {isLoading ? <LoadingState label="Cargando dashboard operativo..." className="mb-6" /> : null}
 
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             {kpiData.length === 0 ? (
@@ -696,7 +717,7 @@ export default function AdminDashboardPage() {
             <div className="w-full max-w-xl bg-white border border-gray-200 rounded-sm p-6">
               <h3 className="text-2xl font-semibold text-gray-800">Alertas operativas</h3>
               <p className="text-sm text-gray-600 mt-1">
-                Se�ales detectadas a partir de ordenes reales del filtro actual.
+                Señales detectadas a partir de ordenes reales del filtro actual.
               </p>
 
               <div className="mt-6 space-y-3">
@@ -724,3 +745,5 @@ export default function AdminDashboardPage() {
     </Layout>
   );
 }
+
+

@@ -9,6 +9,7 @@ import productsRouter from '../../routes/products.routes';
 import usersRouter from '../../routes/users.routes';
 import rolesRouter from '../../routes/roles.route';
 import workOrdersRouter from '../../routes/workorders.routes';
+import syncRouter from '../../routes/sync.routes';
 import { authenticate } from '../../middleware/auth';
 import { requirePermissions } from '../../middleware/rbac';
 
@@ -22,11 +23,10 @@ export function buildApiRouter() {
   router.use('/auth', authRouter());
   router.use(inventoryRouter());
   router.use('/work-orders', workOrdersRouter);
+  router.use('/sync', syncRouter);
   router.use(kpiRouter());
   router.use('/users', usersRouter);
   router.use('/roles', rolesRouter);
-
-  /// Mount audit: protected by auth + permit audit:read
   router.use('/audit', authenticate, requirePermissions(['audit:read']), auditRouter());
 
   return router;

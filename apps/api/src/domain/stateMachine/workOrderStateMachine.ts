@@ -54,3 +54,26 @@ export function validateTransition(
     );
   }
 }
+
+// helpers used by controllers and for convenience
+export function canTransition(
+  current: WorkOrderStatus,
+  next: WorkOrderStatus,
+  type: WorkOrderType,
+): boolean {
+  try {
+    validateTransition(type, current, next);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function assertTransition(
+  current: WorkOrderStatus,
+  next: WorkOrderStatus,
+  type: WorkOrderType,
+) {
+  validateTransition(type, current, next);
+}
+

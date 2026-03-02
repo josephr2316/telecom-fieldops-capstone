@@ -3,11 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { apiClient } from "../services/apiClient";
 import Layout from "../layouts/Layout";
 import PageNavigation from "../components/PageNavigation";
+import StatusBanner from "../components/StatusBanner";
+import LoadingState from "../components/LoadingState";
 import {
   getOfflineQueue,
   pushToOfflineQueue,
   removeOfflineQueueItem,
   setOfflineQueue,
+  downloadOfflineQueueAsJson,
   type OfflineQueueItem,
 } from "../utils/offlineQueue";
 
@@ -194,25 +197,47 @@ export default function MyOrdersPage() {
               Órdenes asignadas: checklist, notas y cambio de estado. Los cambios se guardan offline si no hay conexión.
             </p>
             {!isOnline && (
-              <div className="mt-4 p-3 bg-amber-100 border border-amber-300 rounded text-amber-800 text-sm">
-                Sin conexión. Los cambios se guardarán en cola y se enviarán al recuperar la red.
-              </div>
+              <StatusBanner
+                tone="warning"
+                title="Sin conexion"
+                message="Los cambios se guardaran en cola y se enviaran al recuperar la red."
+                className="mt-4"
+              />
             )}
             {isOnline && currentQueue.length > 0 && (
-              <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded text-green-800 text-sm">
-                Cola pendiente: {currentQueue.length} cambio(s). Sincronizando…
-              </div>
+              <StatusBanner
+                tone="success"
+                title="Sincronizacion en progreso"
+                message={`Cola pendiente: ${currentQueue.length} cambio(s).`}
+                detail="Los cambios offline se estan enviando al servidor."
+                className="mt-4"
+              />
             )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={downloadOfflineQueueAsJson}
+                className="bg-gray-100 border border-gray-300 text-gray-800 px-3 py-2 text-sm rounded-sm hover:bg-gray-200"
+              >
+                Exportar cola offline a JSON (RF-11)
+              </button>
+            </div>
           </header>
 
           {message && (
-            <div className="bg-white border border-gray-200 rounded-sm p-4 text-sm text-gray-700 mb-6">{message}</div>
+            <StatusBanner
+              tone="error"
+              title="Error en mis ordenes"
+              message={message}
+              className="mb-6"
+              role="alert"
+            />
           )}
 
           <section className="bg-white border border-gray-200 rounded-sm p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Lista de órdenes asignadas</h2>
             {loading ? (
-              <p className="text-sm text-gray-600">Cargando…</p>
+              <LoadingState label="Cargando ordenes asignadas..." />
             ) : orders.length === 0 ? (
               <p className="text-sm text-gray-600">No hay órdenes asignadas.</p>
             ) : (

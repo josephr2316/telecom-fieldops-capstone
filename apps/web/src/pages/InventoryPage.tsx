@@ -4,6 +4,8 @@ import InventoryTable from "../components/InventoryTable";
 import { apiClient } from "../services/apiClient";
 import Layout from "../layouts/Layout";
 import PageNavigation from "../components/PageNavigation";
+import StatusBanner from "../components/StatusBanner";
+import LoadingState from "../components/LoadingState";
 
 type Branch = {
   id: string;
@@ -27,16 +29,21 @@ export default function InventoryPage() {
   const [selectedBranchId, setSelectedBranchId] = useState("");
   const [inventoryRows, setInventoryRows] = useState<InventoryRow[]>([]);
   const [message, setMessage] = useState("");
+  const [loadingBranches, setLoadingBranches] = useState(true);
+  const [loadingInventory, setLoadingInventory] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
+        setLoadingBranches(true);
         const [branchRows] = await Promise.all([apiClient.get<Branch[]>("/api/v1/inventory/branches")]);
         setBranches(branchRows);
         const first = branchRows[0]?.id ?? "";
         setSelectedBranchId(first);
       } catch (err) {
         setMessage(err instanceof Error ? err.message : "Error cargando sucursales");
+      } finally {
+        setLoadingBranches(false);
       }
     };
     void load();
@@ -49,12 +56,15 @@ export default function InventoryPage() {
     }
     const loadInv = async () => {
       try {
+        setLoadingInventory(true);
         const rows = await apiClient.get<InventoryRow[]>(
           `/api/v1/inventory?branchId=${encodeURIComponent(selectedBranchId)}`
         );
         setInventoryRows(rows);
       } catch (err) {
         setMessage(err instanceof Error ? err.message : "Error cargando inventario");
+      } finally {
+        setLoadingInventory(false);
       }
     };
     void loadInv();
@@ -81,6 +91,7 @@ export default function InventoryPage() {
               <select
                 value={selectedBranchId}
                 onChange={(e) => setSelectedBranchId(e.target.value)}
+                disabled={loadingBranches}
                 className="mt-2 block w-full border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#002D72]"
               >
                 {branches.map((b) => (
@@ -93,11 +104,21 @@ export default function InventoryPage() {
           </section>
 
           {message && (
-            <div className="bg-white border border-gray-200 rounded-sm p-4 text-sm text-gray-700 mb-6">{message}</div>
+            <StatusBanner
+              tone="error"
+              title="Error cargando inventario"
+              message={message}
+              className="mb-6"
+              role="alert"
+            />
           )}
 
           <section className="bg-white border border-gray-200 rounded-sm p-6">
-            <InventoryTable rows={inventoryRows} />
+            {loadingBranches || loadingInventory ? (
+              <LoadingState label="Cargando inventario..." />
+            ) : (
+              <InventoryTable rows={inventoryRows} />
+            )}
           </section>
         </div>
       </div>
