@@ -7,6 +7,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "build": "node node_modules/typescript/bin/tsc -p tsconfig.json && node -e \"require('fs').cpSync('src/generated', 'dist/generated', {recursive: true})\" && node -e \"require('fs').mkdirSync('dist/openapi', {recursive: true}); require('fs').copyFileSync('src/openapi/openapi.yaml', 'dist/openapi/openapi.yaml')\"",
     "postinstall": "prisma generate",
+    "prestart": "npm run build",
     "start": "node dist/main.js",
     "release": "npx prisma migrate deploy",
     "typecheck": "tsc -p tsconfig.json --noEmit",
