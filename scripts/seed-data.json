@@ -44,7 +44,7 @@
   ],
   "authRoles": [
     { "id": "role-admin", "name": "admin", "permissionKeys": ["*"] },
-    { "id": "role-tecnico", "name": "tecnico", "permissionKeys": ["workorders:view-own", "workorders:update-state"] },
+    { "id": "role-tecnico", "name": "tecnico", "permissionKeys": ["workorders:view-own", "workorders:update-state", "sync:import"] },
     { "id": "role-supervisor", "name": "supervisor", "permissionKeys": ["workorders:*", "inventory:view"] },
     { "id": "role-ventas", "name": "ventas", "permissionKeys": ["workorders:create", "inventory:reserve"] },
     { "id": "role-security", "name": "security", "permissionKeys": ["audit:read", "users:read", "roles:read"] }
