@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import app from './infra/app';
 import { env } from './config/env';
 import { logger } from './infra/logger/logger';
