@@ -48,7 +48,7 @@ export const userService = {
   },
 
   /** Creates a new user; throws on duplicate email or invalid roles. */
-  async createUser(payload: CreateUserPayload): Promise<UserPublic> {
+  async createUser(payload: CreateUserPayload, actorUserId: string, correlationId: string): Promise<UserPublic> {
     const existing = await userRepository.findByEmail(payload.email);
     if (existing) {
       throw new ApiError(
@@ -75,6 +75,21 @@ export const userService = {
       roles: payload.roles,
       blocked: false,
     });
+
+    await auditService.record({
+      actorUserId,
+      action: AUDIT_ACTIONS.USER_CREATED,
+      entityType: 'user',
+      entityId: created.id,
+      before: null,
+      after: {
+        email: created.email,
+        roles: created.roles,
+        blocked: created.blocked,
+      },
+      correlationId,
+    });
+    
     return toPublicUser(created);
   },
 

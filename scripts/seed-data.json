@@ -53,7 +53,7 @@
     {
       "id": "usr-admin-01",
       "email": "admin@telecom.local",
-      "passwordHash": "$2a$10$PLoUOvMd8aUSCE75RYWRPu1CevcLxTHcsC/X.F/fJdticN5Z1m2dO",
+      "passwordHash": "$2a$10$Whe6tR0iYSDAIUtWUSTzSOwDxcG3QP.VtDU8TiLjpLNHYkV1zrMsy",
       "blocked": false,
       "roles": ["admin"]
     },
@@ -74,7 +74,7 @@
     {
       "id": "usr-ventas-01",
       "email": "ventas@telecom.local",
-      "passwordHash": "$2a$10$.RMR0db7bCfuuiziuzOJCe7MFQcQqhmrnpekbpZsEi3S3XuIpPEmK",
+      "passwordHash": "$2a$10$/I6Pt8vYt1f3uI/nVZ8qUO4QDkD5qLxTsYgWgIeu77.fCwvhClB2q",
       "blocked": false,
       "roles": ["ventas"]
     },

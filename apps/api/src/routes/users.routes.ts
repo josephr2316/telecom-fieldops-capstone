@@ -56,7 +56,7 @@ router.post(
   validateBody(createUserSchema),
   async (req, res, next) => {
     try {
-      const created = await userService.createUser(req.body);
+      const created = await userService.createUser(req.body, req.user!.id, req.correlationId);
       res.status(201).json(created);
     } catch (error) {
       next(error);

@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../src/infra/app';
+import app from '../../src/infra/app';
 
 const login = async (email: string, password: string) => {
   return request(app).post('/api/v1/auth/login').send({ email, password });

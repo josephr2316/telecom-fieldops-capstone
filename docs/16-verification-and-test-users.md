@@ -12,7 +12,7 @@
 - **Rutas montadas bajo `/api/v1`:** auth (login, refresh, logout), catalog (plans, products), inventory (branches, products, reservations), work-orders (CRUD, status, assign, tech-details), sync (import), kpis (dashboard/kpis, kpis/summary), users, roles, audit.
 - **Validación:** Zod en body/params donde aplica; respuestas con ProblemDetails en errores.
 - **Auth/RBAC:** Endpoints protegidos con Bearer JWT; permisos por ruta (requirePermissions / requireAnyPermission). Usuario bloqueado → 403.
-- **Tests:** 13 tests de integración pasando (auth-rbac, sync-import, kpi-dashboard) tras ejecutar el seed.
+- **Tests:** Una sola carpeta `apps/api/tests/` (unit/ e integration/). 27 tests. Tras ejecutarlos, el suite user-management restaura en BD los usuarios y roles del seed, así que el login desde el frontend (admin@telecom.local / Admin123!) sigue funcionando después de `npm test`.
 
 ## 3. Frontend
 

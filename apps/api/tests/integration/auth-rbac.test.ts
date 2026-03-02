@@ -1,9 +1,9 @@
 import request from 'supertest';
-import app from '../src/infra/app';
-import { resetDb } from '../src/infra/db/connection';
-import { userRepository } from '../src/infra/repositories/user.repo';
-import { auditService } from '../src/domain/services/audit.service';
-import type { AuditEvent } from '../src/domain/models/types';
+import app from '../../src/infra/app';
+import { resetDb } from '../../src/infra/db/connection';
+import { userRepository } from '../../src/infra/repositories/user.repo';
+import { auditService } from '../../src/domain/services/audit.service';
+import type { AuditEvent } from '../../src/domain/models/types';
 
 const VENTAS_USER_ID = 'usr-ventas-01';
 

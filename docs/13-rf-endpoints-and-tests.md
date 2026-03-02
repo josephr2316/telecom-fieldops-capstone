@@ -73,7 +73,8 @@ En `infra/routes/index.ts` se montan los routers, por ejemplo: `router.use(healt
 
 | RF | Descripción | Endpoints | Archivos principales |
 |----|-------------|-----------|---------------------|
-| RF-04 | Catálogo de planes | GET/POST/PATCH/DELETE /catalog/plans, activate, deactivate | `routes/plans.routes.ts`, `domain/services/plans.service.ts` |
+| RF-02 | Gestión de usuarios | GET/POST/PATCH /users, block/unblock | `routes/users.ts`, `services/user.service.ts`, `tests/integration/user-management.test.ts`| 
+| RF-04 | Catálogo de planes | GET/POST/PATCH/DELETE /catalog/plans, activate, deactivate | `routes/plans.routes.ts`, `domain/services/plans.service.ts` | 
 | RF-05 | Catálogo de productos | GET/POST/PATCH/DELETE /catalog/products | `routes/products.routes.ts`, `domain/services/products.service.ts` |
 | RF-06 | Inventario por sucursal | GET /inventory?branchId=, GET /inventory/branches, GET /inventory/products | `routes/inventory.routes.ts`, `domain/services/invetory.service.ts` |
 | RF-07 | Reservar y liberar inventario | POST /inventory/reservations, DELETE /inventory/reservations/:workOrderId | `routes/inventory.routes.ts`, `domain/services/invetory.service.ts` |
