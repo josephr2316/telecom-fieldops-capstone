@@ -81,7 +81,7 @@ describe('RF-02 Gestión de Usuarios - Functional Tests', () => {
         expect(res.body.email).toBe('new-operator@telecom.local');
   });
 
-  it('FT-RF02-02 Rechazar creación de usuario duplicado (409)', async () => {
+  it('FT-RF02-02 Rechazar creación de usuario duplicado', async () => {
     const res = await request(app)
       .post('/api/v1/users')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -90,7 +90,7 @@ describe('RF-02 Gestión de Usuarios - Functional Tests', () => {
     expect(res.status).toBe(409);
   });
 
-  it('FT-RF02-05 Rechazar edicion de usuario inexistente (404)', async () => {
+  it('FT-RF02-05 Rechazar edicion de usuario inexistente', async () => {
     const res = await request(app)
       .patch('/api/v1/users/usr-invalid-id')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -113,13 +113,16 @@ describe('RF-02 Gestión de Usuarios - Functional Tests', () => {
     expect(res.body.blocked).toBe(true);
   });
 
-  it('FT-RF02-03 Rechazar creación con input inválido (Zod Validation)', async () => {
+  it('FT-RF02-03 Rechazar creación con input inválido', async () => {
     const res = await request(app)
       .post('/api/v1/users')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ email: 'not-an-email', password: '123', roles: [] });
 
     expect(res.status).toBe(400);
+    expect(res.body.errors).toBeDefined();
+    expect(res.body.errors).toHaveProperty('email');
+    expect(res.body.errors).toHaveProperty('password');
   });
 
   it('FT-RF02-06 Bloquear usuario activo', async () => {
@@ -146,6 +149,21 @@ describe('RF-02 Gestión de Usuarios - Functional Tests', () => {
       expect([401, 403]).toContain(res.status);
   });
 
+
+  it('FT-RF02-08 Rechazar bloqueo de usuario inexistente', async () => {
+  const res = await request(app)
+    .patch('/api/v1/users/usr-non-existent-999')
+    .set('Authorization', `Bearer ${adminToken}`)
+    .send({ blocked: true });
+
+  expect(res.status).toBe(404);
+  expect(res.body).toMatchObject({
+    status: 404,
+    title: expect.any(String),
+    correlationId: expect.any(String)
+  });
+});
+
   it('FT-RF02-09 RBAC - Operador no tiene permisos de creación', async () => {
     expect(operatorToken).toBeDefined();
     
@@ -159,6 +177,7 @@ describe('RF-02 Gestión de Usuarios - Functional Tests', () => {
 
   it('FT-RF02-10 Trazabilidad completa (Auditoría)', async () => {
     const correlationId = 'audit-test-123';
+    const targetId = 'usr-target-edit-01';
     
     await request(app)
       .patch('/api/v1/users/usr-target-edit-01')
@@ -166,16 +185,22 @@ describe('RF-02 Gestión de Usuarios - Functional Tests', () => {
       .set('X-Correlation-Id', correlationId)
       .send({ roles: ['ADMIN']});
 
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 1000));
 
     const log = await prisma.audit.findFirst({ where: { correlationId: correlationId } });
 
-    console.log('DEBUG: Registro encontrado en Audit:', log);
+    console.log('Debugging', log);
 
     expect(log).not.toBeNull();
     expect(log?.entityType).toBe('user'); 
-    expect(log?.action).toBe('AUD-04 ROLEASSIGNED'); 
-    expect(log?.correlationId).toBe(correlationId);
+    expect(log?.entityId).toBe(targetId);
+    expect(log?.action).toContain('ROLEASSIGNED');
+
+    const before = typeof log?.before === 'string' ? JSON.parse(log.before) : log?.before;
+    const after = typeof log?.after === 'string' ? JSON.parse(log.after) : log?.after;
+
+    expect(after.roles).toContain('ADMIN');
+    expect(before.roles).toContain('OPERATOR');
   });
 });
 

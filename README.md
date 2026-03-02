@@ -157,7 +157,7 @@ Prisma crea la carpeta en `prisma/migrations/` con el `migration.sql` y lo aplic
 - **Listo:** `.env` con `DATABASE_URL` apuntando a la base **capstone** (con los params indicados en `.env.example`), migraciones aplicadas, `npx prisma generate` ejecutado. Las tablas existen en capstone; la API usa Prisma (repos en `src/infra/repositories/`) contra esa base.
 
 ## Cómo correr tests
-(pendiente)
+- **RF-02**: $env:NODE_TLS_REJECT_UNAUTHORIZED='0'; npm test -- tests/user-management.test.ts
 
 ## Arquitectura
 
