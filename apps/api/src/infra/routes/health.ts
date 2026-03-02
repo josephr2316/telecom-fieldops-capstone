@@ -1,9 +1,15 @@
-import { Router, Request, Response } from 'express';
+import { Router } from "express";
 
-const router = Router();
+export function healthRouter() {
+  const router = Router();
 
-router.get('/health', (_req: Request, res: Response) => {
-  res.status(200).send('ok');
-});
+  router.get("/health", (_req, res) => {
+    res.status(200).json({
+      status: "ok",
+      service: "telecom-fieldops-api",
+      timestamp: new Date().toISOString(),
+    });
+  });
 
-export default router;
+  return router;
+}

@@ -7,7 +7,7 @@
   "plans": [
     { "id": "plan_home_200", "name": "Internet Hogar 200Mbps", "type": "HOME_INTERNET", "price": 1850, "currency": "DOP", "isActive": true },
     { "id": "plan_home_500", "name": "Internet Hogar 500Mbps", "type": "HOME_INTERNET", "price": 2950, "currency": "DOP", "isActive": true },
-    { "id": "plan_mobile_20gb", "name": "Móvil 20GB", "type": "MOBILE_DATA", "price": 1299, "currency": "DOP", "isActive": true },
+    { "id": "plan_mobile_20gb", "name": "Movil 20GB", "type": "MOBILE_DATA", "price": 1299, "currency": "DOP", "isActive": true },
     { "id": "plan_voice_600", "name": "Voz 600 min", "type": "VOICE", "price": 799, "currency": "DOP", "isActive": true },
     { "id": "plan_business_1g", "name": "Business 1Gbps", "type": "BUSINESS", "price": 199, "currency": "USD", "isActive": true }
   ],
@@ -30,15 +30,125 @@
     { "id": "inv_main_fiber", "branchId": "br_main", "productId": "prod_cable_fiber_10m", "qtyAvailable": 80, "qtyReserved": 0 }
   ],
   "roles": [
-    { "id": "role_admin", "name": "Admin", "permissionKeys": ["users:read","users:block","roles:read","catalog:read","inventory:read","workorders:create","workorders:status","audit:read","kpis:read","sync:import"] },
-    { "id": "role_sales", "name": "Sales", "permissionKeys": ["catalog:read","inventory:read","workorders:create","workorders:read"] },
-    { "id": "role_ops", "name": "Ops", "permissionKeys": ["inventory:read","workorders:status","audit:read","kpis:read"] },
-    { "id": "role_tech", "name": "Tech", "permissionKeys": ["workorders:read","workorders:status","sync:import","catalog:read"] }
+    { "id": "role_admin", "name": "Admin", "permissionKeys": ["users:read", "users:create", "users:update", "users:block", "roles:read", "catalog:read", "inventory:read", "inventory:reserve", "workorders:create", "workorders:read", "workorders:status", "workorders:view-own", "workorders:update-state", "audit:read", "kpis:read", "sync:import"] },
+    { "id": "role_sales", "name": "Sales", "permissionKeys": ["catalog:read", "inventory:read", "inventory:reserve", "workorders:create", "workorders:read"] },
+    { "id": "role_ops", "name": "Ops", "permissionKeys": ["catalog:read", "inventory:read", "workorders:read", "workorders:status", "audit:read", "kpis:read"] },
+    { "id": "role_tech", "name": "Tech", "permissionKeys": ["catalog:read", "inventory:read", "workorders:read", "workorders:status", "workorders:view-own", "workorders:update-state", "sync:import"] },
+    { "id": "role_security", "name": "Security", "permissionKeys": ["audit:read", "users:read", "roles:read"] }
   ],
   "users": [
     { "id": "usr_admin_01", "username": "admin", "displayName": "Admin User", "isActive": true, "roleIds": ["role_admin"] },
     { "id": "usr_sales_01", "username": "sales1", "displayName": "Sales Agent 1", "isActive": true, "roleIds": ["role_sales"] },
     { "id": "usr_ops_01", "username": "ops1", "displayName": "Ops User 1", "isActive": true, "roleIds": ["role_ops"] },
     { "id": "usr_tech_07", "username": "tech7", "displayName": "Tech 7", "isActive": true, "roleIds": ["role_tech"] }
+  ],
+  "authRoles": [
+    { "id": "role-admin", "name": "admin", "permissionKeys": ["*"] },
+    { "id": "role-tecnico", "name": "tecnico", "permissionKeys": ["workorders:view-own", "workorders:update-state"] },
+    { "id": "role-supervisor", "name": "supervisor", "permissionKeys": ["workorders:*", "inventory:view"] },
+    { "id": "role-ventas", "name": "ventas", "permissionKeys": ["workorders:create", "inventory:reserve"] },
+    { "id": "role-security", "name": "security", "permissionKeys": ["audit:read", "users:read", "roles:read"] }
+  ],
+  "authUsers": [
+    {
+      "id": "usr-admin-01",
+      "email": "admin@telecom.local",
+      "passwordHash": "$2a$10$0C9TEt02NqB54ENZTrG8Bec8U1yvEK09IcNonKDWCi9SJJOQdCDQe",
+      "blocked": false,
+      "roles": ["admin"]
+    },
+    {
+      "id": "usr-tecnico-01",
+      "email": "tecnico@telecom.local",
+      "passwordHash": "$2a$10$GMO310f9eSUAqFuX3L4AG.DkuPoXeoi6o3IDXaU4gwFBtOnroH4rC",
+      "blocked": false,
+      "roles": ["tecnico"]
+    },
+    {
+      "id": "usr-supervisor-01",
+      "email": "supervisor@telecom.local",
+      "passwordHash": "$2a$10$YpmaG9j4r/v3iF8yU9tWIeWjgt635ilCg/xSqwv0rQESrNRKCTAqO",
+      "blocked": false,
+      "roles": ["supervisor"]
+    },
+    {
+      "id": "usr-ventas-01",
+      "email": "ventas@telecom.local",
+      "passwordHash": "$2a$10$uoMKrbWC0dJbRTHTeCd1MeKKckBCfzNbY7nk6VD0Z1mvNvPRw/FZ.",
+      "blocked": false,
+      "roles": ["ventas"]
+    },
+    {
+      "id": "usr-security-01",
+      "email": "security@telecom.local",
+      "passwordHash": "$2a$10$0C9TEt02NqB54ENZTrG8Bec8U1yvEK09IcNonKDWCi9SJJOQdCDQe",
+      "blocked": false,
+      "roles": ["security"]
+    }
+  ],
+  "audits": [],
+  "revokedRefreshTokens": [],
+  "workOrders": [
+    {
+      "id": "wo_01",
+      "type": "NEW_SERVICE_INSTALL",
+      "status": "DRAFT",
+      "customerId": "cust_001",
+      "branchId": "br_main",
+      "planId": "plan_home_200",
+      "assignedTechUserId": "usr-tecnico-01",
+      "version": 0,
+      "items": [
+        { "productId": "prod_router_ax", "qty": 1 },
+        { "productId": "prod_ont_fiber", "qty": 1 },
+        { "productId": "prod_cable_fiber_10m", "qty": 2 }
+      ],
+      "technicianNotes": "Instalación pendiente. Cliente solicita horario matutino. Equipo ya reservado en sucursal principal.",
+      "checklist": [
+        { "id": "1", "label": "Verificar equipo en sitio", "completed": false },
+        { "id": "2", "label": "Comprobar señal", "completed": false },
+        { "id": "3", "label": "Documentar resultado", "completed": false }
+      ],
+      "createdAt": "2025-02-28T10:00:00.000Z",
+      "updatedAt": "2025-02-28T10:00:00.000Z"
+    },
+    {
+      "id": "wo_02",
+      "type": "PLAN_AND_EQUIPMENT_SALE",
+      "status": "SUBMITTED",
+      "customerId": "cust_002",
+      "branchId": "br_east",
+      "planId": "plan_mobile_20gb",
+      "assignedTechUserId": "usr-tecnico-01",
+      "version": 1,
+      "items": [{ "productId": "prod_sim_5g", "qty": 1 }],
+      "technicianNotes": "Venta SIM 5G activada. Cliente recogió en ventanilla. Pendiente activación en red.",
+      "checklist": [
+        { "id": "1", "label": "Entrega de SIM", "completed": true },
+        { "id": "2", "label": "Registro en sistema", "completed": true },
+        { "id": "3", "label": "Activación en red", "completed": false }
+      ],
+      "createdAt": "2025-02-28T11:00:00.000Z",
+      "updatedAt": "2025-02-28T11:30:00.000Z"
+    },
+    {
+      "id": "wo_03",
+      "type": "CLAIM_TROUBLESHOOT",
+      "status": "SCHEDULED",
+      "customerId": "cust_003",
+      "branchId": "br_main",
+      "planId": "plan_home_200",
+      "assignedTechUserId": "usr-tecnico-01",
+      "version": 2,
+      "items": [ { "productId": "prod_cable_fiber_10m", "qty": 1 } ],
+      "technicianNotes": "Cliente reporta falla de señal desde ayer. Revisión en poste y medición de niveles programada. Equipo de medición listo.",
+      "checklist": [
+        { "id": "1", "label": "Verificar equipo en sitio", "completed": true },
+        { "id": "2", "label": "Comprobar señal", "completed": false },
+        { "id": "3", "label": "Documentar resultado", "completed": false }
+      ],
+      "createdAt": "2025-02-27T09:00:00.000Z",
+      "updatedAt": "2025-02-28T08:00:00.000Z"
+    }
   ]
 }

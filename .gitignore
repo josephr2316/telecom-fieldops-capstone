@@ -1,5 +1,6 @@
-# Dependencies
+# Dependencies (cualquier nivel: raíz, apps/api, apps/web, etc.)
 node_modules/
+**/node_modules/
 
 # Build output
 dist/

@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 const fs = require("fs");
 const path = require("path");
+const { createRequire } = require("module");
 
 async function main() {
   const openapiPath =
@@ -24,27 +25,60 @@ async function main() {
   let SwaggerParser;
   let yaml;
 
+  let cwdRequire = null;
+  try {
+    cwdRequire = createRequire(path.join(process.cwd(), "package.json"));
+  } catch (e) {
+    cwdRequire = null;
+  }
+
   try {
     SwaggerParser = require("@apidevtools/swagger-parser");
   } catch (e) {
-    console.error(
-      "[openapi] Missing dependency: @apidevtools/swagger-parser\n" +
-        "Add it as a devDependency in the repo root:\n" +
-        "  npm i -D @apidevtools/swagger-parser\n",
-    );
-    process.exit(1);
+    if (cwdRequire) {
+      try {
+        SwaggerParser = cwdRequire("@apidevtools/swagger-parser");
+      } catch (err) {
+        console.error(
+          "[openapi] Missing dependency: @apidevtools/swagger-parser\n" +
+            "Install it in your current package:\n" +
+            "  npm i -D @apidevtools/swagger-parser\n",
+        );
+        process.exit(1);
+      }
+    } else {
+      console.error(
+        "[openapi] Missing dependency: @apidevtools/swagger-parser\n" +
+          "Install it in your current package:\n" +
+          "  npm i -D @apidevtools/swagger-parser\n",
+      );
+      process.exit(1);
+    }
   }
 
   if (ext !== ".json") {
     try {
       yaml = require("js-yaml");
     } catch (e) {
-      console.error(
-        "[openapi] Missing dependency: js-yaml\n" +
-          "Add it as a devDependency in the repo root:\n" +
-          "  npm i -D js-yaml\n",
-      );
-      process.exit(1);
+      if (cwdRequire) {
+        try {
+          yaml = cwdRequire("js-yaml");
+        } catch (err) {
+          console.error(
+            "[openapi] Missing dependency: js-yaml\n" +
+              "Install it in your current package:\n" +
+              "  npm i -D js-yaml\n",
+          );
+          process.exit(1);
+        }
+      } else {
+        console.error(
+          "[openapi] Missing dependency: js-yaml\n" +
+            "Install it in your current package:\n" +
+            "  npm i -D js-yaml\n",
+        );
+        process.exit(1);
+      }
     }
   }
 

@@ -1,0 +1,44 @@
+{
+  "branches": [
+    { "id": "br_main", "name": "Sucursal Principal", "isMain": true },
+    { "id": "br_east", "name": "Sucursal Este", "isMain": false },
+    { "id": "br_west", "name": "Sucursal Oeste", "isMain": false }
+  ],
+  "plans": [
+    { "id": "plan_home_200", "name": "Internet Hogar 200Mbps", "type": "HOME_INTERNET", "price": 1850, "currency": "DOP", "isActive": true },
+    { "id": "plan_home_500", "name": "Internet Hogar 500Mbps", "type": "HOME_INTERNET", "price": 2950, "currency": "DOP", "isActive": true },
+    { "id": "plan_mobile_20gb", "name": "Móvil 20GB", "type": "MOBILE_DATA", "price": 1299, "currency": "DOP", "isActive": true },
+    { "id": "plan_voice_600", "name": "Voz 600 min", "type": "VOICE", "price": 799, "currency": "DOP", "isActive": true },
+    { "id": "plan_business_1g", "name": "Business 1Gbps", "type": "BUSINESS", "price": 199, "currency": "USD", "isActive": true }
+  ],
+  "products": [
+    { "id": "prod_router_ax", "name": "Router WiFi 6 AX", "category": "ROUTER", "isSerialized": true },
+    { "id": "prod_modem_docsis", "name": "Modem DOCSIS", "category": "MODEM", "isSerialized": true },
+    { "id": "prod_ont_fiber", "name": "ONT Fibra", "category": "ONT", "isSerialized": true },
+    { "id": "prod_stb_tv", "name": "Decodificador TV", "category": "STB", "isSerialized": true },
+    { "id": "prod_cable_fiber_10m", "name": "Cable Fibra 10m", "category": "CABLE", "isSerialized": false },
+    { "id": "prod_cable_copper_10m", "name": "Cable UTP 10m", "category": "CABLE", "isSerialized": false },
+    { "id": "prod_sim_5g", "name": "SIM 5G", "category": "SIM", "isSerialized": true },
+    { "id": "prod_antenna_sector", "name": "Antena Sectorial", "category": "ANTENNA", "isSerialized": true }
+  ],
+  "inventory": [
+    { "id": "inv_main_router", "branchId": "br_main", "productId": "prod_router_ax", "qtyAvailable": 30, "qtyReserved": 0 },
+    { "id": "inv_main_ont", "branchId": "br_main", "productId": "prod_ont_fiber", "qtyAvailable": 18, "qtyReserved": 0 },
+    { "id": "inv_east_router", "branchId": "br_east", "productId": "prod_router_ax", "qtyAvailable": 10, "qtyReserved": 0 },
+    { "id": "inv_west_router", "branchId": "br_west", "productId": "prod_router_ax", "qtyAvailable": 7, "qtyReserved": 0 },
+    { "id": "inv_east_sim", "branchId": "br_east", "productId": "prod_sim_5g", "qtyAvailable": 40, "qtyReserved": 0 },
+    { "id": "inv_main_fiber", "branchId": "br_main", "productId": "prod_cable_fiber_10m", "qtyAvailable": 80, "qtyReserved": 0 }
+  ],
+  "roles": [
+    { "id": "role_admin", "name": "Admin", "permissionKeys": ["users:read","users:block","roles:read","catalog:read","inventory:read","workorders:create","workorders:status","audit:read","kpis:read","sync:import"] },
+    { "id": "role_sales", "name": "Sales", "permissionKeys": ["catalog:read","inventory:read","workorders:create","workorders:read"] },
+    { "id": "role_ops", "name": "Ops", "permissionKeys": ["inventory:read","workorders:status","audit:read","kpis:read"] },
+    { "id": "role_tech", "name": "Tech", "permissionKeys": ["workorders:read","workorders:status","sync:import","catalog:read"] }
+  ],
+  "users": [
+    { "id": "usr_admin_01", "username": "admin", "displayName": "Admin User", "isActive": true, "roleIds": ["role_admin"] },
+    { "id": "usr_sales_01", "username": "sales1", "displayName": "Sales Agent 1", "isActive": true, "roleIds": ["role_sales"] },
+    { "id": "usr_ops_01", "username": "ops1", "displayName": "Ops User 1", "isActive": true, "roleIds": ["role_ops"] },
+    { "id": "usr_tech_07", "username": "tech7", "displayName": "Tech 7", "isActive": true, "roleIds": ["role_tech"] }
+  ]
+}

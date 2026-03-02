@@ -28,6 +28,24 @@ jobs:
     defaults:
       run:
         working-directory: apps/api
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: capstone
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/capstone
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/capstone
+      NODE_ENV: test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,6 +70,12 @@ jobs:
 
       - name: Validate OpenAPI from API package
         run: NODE_PATH=./node_modules npm run openapi:validate --if-present
+
+      - name: Migrate DB
+        run: npm run migrate --if-present
+
+      - name: Seed DB
+        run: npx prisma db seed
 
       - name: Test
         run: npm test --if-present

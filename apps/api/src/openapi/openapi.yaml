@@ -2,87 +2,211 @@ openapi: 3.1.0
 info:
   title: Telecom FieldOps API
   version: 1.0.0
-  description: API first contract for operations, inventory, and work orders with audit and security.
+  description: Security-focused API for authentication, user management, roles and audit-ready operations.
 servers:
-  - url: https://example.com/api/v1
+  - url: http://localhost:3000/api/v1
 
 tags:
+  - name: Health
   - name: Auth
   - name: Users
   - name: Roles
+  - name: Plans
   - name: Catalog
   - name: Inventory
   - name: WorkOrders
-  - name: Audit
   - name: KPIs
 
 components:
   securitySchemes:
+    OAuth2Password:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: /api/v1/auth/login
+          scopes: {}
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-API-Key
+
+  headers:
+    X-Correlation-Id:  
+      description: ID único de trazabilidad de la petición (UUID v4).
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440000"
 
   schemas:
     ProblemDetails:
       type: object
-      required: [type, title, status, detail, correlationId]
+      required: [type, title, status, detail, instance, correlationId]
       properties:
-        type: { type: string, example: "urn:telecom:error:validation" }
-        title: { type: string, example: "Validation error" }
-        status: { type: integer, example: 400 }
-        detail: { type: string, example: "Invalid input." }
-        instance: { type: string, example: "/api/v1/work-orders" }
-        correlationId: { type: string, example: "c_123abc" }
+        type:
+          type: string
+          example: urn:telecom:error:validation
+        title:
+          type: string
+          example: Validation Error
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: Request body validation failed.
+        instance:
+          type: string
+          example: /api/v1/users
+        correlationId:
+          type: string
+          example: c123
         errors:
           type: object
           additionalProperties:
             type: array
-            items: { type: string }
-
-    AuditEvent:
-      type: object
-      required: [id, at, actorUserId, action, entityType, entityId]
-      properties:
-        id: { type: string, example: "aud_1001" }
-        at: { type: string, format: date-time }
-        actorUserId: { type: string, example: "usr_001" }
-        action: { type: string, example: "WORK_ORDER_STATUS_CHANGED" }
-        entityType: { type: string, example: "workOrder" }
-        entityId: { type: string, example: "wo_10021" }
-        before: { type: object, additionalProperties: true }
-        after: { type: object, additionalProperties: true }
-        correlationId: { type: string, example: "c_123abc" }
-
-    User:
-      type: object
-      required: [id, username, displayName, isActive]
-      properties:
-        id: { type: string }
-        username: { type: string }
-        displayName: { type: string }
-        isActive: { type: boolean }
-        roleIds:
-          type: array
-          items: { type: string }
+            items:
+              type: string
 
     Role:
       type: object
       required: [id, name, permissionKeys]
       properties:
-        id: { type: string }
-        name: { type: string }
+        id:
+          type: string
+        name:
+          type: string
         permissionKeys:
           type: array
-          items: { type: string }
+          items:
+            type: string
+
+    UserPublic:
+      type: object
+      required: [id, email, blocked, roles]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        blocked:
+          type: boolean
+        roles:
+          type: array
+          items:
+            type: string
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+
+    LoginResponse:
+      type: object
+      required: [accessToken, refreshToken, tokenType, expiresIn, refreshExpiresIn, user]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          example: 3600
+        refreshExpiresIn:
+          type: integer
+          example: 604800
+        user:
+          allOf:
+            - $ref: '#/components/schemas/UserPublic'
+            - type: object
+              required: [permissions]
+              properties:
+                permissions:
+                  type: array
+                  items:
+                    type: string
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    CreateUserRequest:
+      type: object
+      required: [email, password, roles]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        roles:
+          type: array
+          minItems: 1
+          items:
+            type: string
+
+    UpdateUserRequest:
+      type: object
+      minProperties: 1
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        blocked:
+          type: boolean
+        roles:
+          type: array
+          minItems: 1
+          items:
+            type: string
+
+    AuditEvent:
+      type: object
+      required: [id, at, actorUserId, action, entityType, entityId]
+      properties:
+        id: { type: string, example: "evt-001" }
+        at: { type: string, format: date-time, example: "2026-02-27T14:30:00Z" }
+        actorUserId: { type: string, nullable: true, example: "admin_01" }
+        action: 
+          type: string
+          description: "Código de acción estandarizado (ej: AUD-03 USERBLOCKED)"
+          example: "AUD-03 USERBLOCKED"
+        entityType: { type: string, example: "user" }
+        entityId: { type: string, example: "usr-2c29e6e4-2581-4b5d-a257" }
+        before: { type: object, additionalProperties: true, nullable: true }
+        after: { type: object, additionalProperties: true, nullable: true }
+        correlationId: { type: string, example: "c-998877" }
 
     Plan:
       type: object
-      required: [id, name, type, price, currency, isActive]
+      required:
+        - id
+        - name
+        - type
+        - price
+        - currency
+        - isActive
+        - description
+        - category
+        - status
+        - monthlyPrice
       properties:
         id: { type: string }
         name: { type: string }
@@ -90,6 +214,47 @@ components:
         price: { type: number }
         currency: { type: string, enum: [DOP, USD] }
         isActive: { type: boolean }
+        description: { type: string }
+        category: { type: string, enum: [RESIDENCIAL, MOVIL, EMPRESARIAL, TV] }
+        status: { type: string, enum: [ACTIVE, INACTIVE] }
+        monthlyPrice: { type: number }
+        downloadSpeedMbps: { type: integer, nullable: true }
+        uploadSpeedMbps: { type: integer, nullable: true }
+        dataLimitGB: { type: integer, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CreatePlanRequest:
+      type: object
+      required: [name, type, price, currency]
+      properties:
+        name: { type: string }
+        type: { type: string, enum: [HOME_INTERNET, MOBILE_DATA, VOICE, TV, BUSINESS] }
+        price: { type: number, minimum: 0 }
+        currency: { type: string, enum: [DOP, USD] }
+        isActive: { type: boolean }
+        description: { type: string }
+        category: { type: string, enum: [RESIDENCIAL, MOVIL, EMPRESARIAL, TV] }
+        downloadSpeedMbps: { type: integer, minimum: 0, nullable: true }
+        uploadSpeedMbps: { type: integer, minimum: 0, nullable: true }
+        dataLimitGB: { type: integer, minimum: 0, nullable: true }
+
+    UpdatePlanRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name: { type: string }
+        type: { type: string, enum: [HOME_INTERNET, MOBILE_DATA, VOICE, TV, BUSINESS] }
+        price: { type: number, minimum: 0 }
+        currency: { type: string, enum: [DOP, USD] }
+        isActive: { type: boolean }
+        description: { type: string }
+        category: { type: string, enum: [RESIDENCIAL, MOVIL, EMPRESARIAL, TV] }
+        status: { type: string, enum: [ACTIVE, INACTIVE] }
+        monthlyPrice: { type: number, minimum: 0 }
+        downloadSpeedMbps: { type: integer, minimum: 0, nullable: true }
+        uploadSpeedMbps: { type: integer, minimum: 0, nullable: true }
+        dataLimitGB: { type: integer, minimum: 0, nullable: true }
 
     Product:
       type: object
@@ -100,94 +265,25 @@ components:
         category: { type: string, enum: [ROUTER, MODEM, ONT, STB, ANTENNA, CABLE, PHONE, TABLET, LAPTOP, SIM] }
         isSerialized: { type: boolean }
 
+    Branch:
+      type: object
+      required: [id, name, isMain]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        isMain: { type: boolean }
+
     InventoryItem:
       type: object
-      required: [id, branchId, productId, qtyAvailable, qtyReserved, updatedAt]
+      required: [id, branchId, productId, qtyAvailable, qtyReserved]
       properties:
         id: { type: string }
         branchId: { type: string }
         productId: { type: string }
         qtyAvailable: { type: integer }
         qtyReserved: { type: integer }
-        updatedAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time, nullable: true }
 
-    WorkOrderType:
-      type: string
-      enum:
-        - NEW_SERVICE_INSTALL
-        - CLAIM_TROUBLESHOOT
-        - PLAN_AND_EQUIPMENT_SALE
-        - MONTHLY_PAYMENT
-        - EQUIPMENT_REPLACEMENT
-        - SERVICE_UPGRADE
-        - SERVICE_DOWN_OUTAGE
-        - SIM_REPLACEMENT
-
-    WorkOrderStatus:
-      type: string
-      enum:
-        - DRAFT
-        - SUBMITTED
-        - IN_REVIEW
-        - ELIGIBILITY_CHECK
-        - INVENTORY_RESERVATION
-        - SCHEDULED
-        - IN_PROGRESS
-        - VERIFICATION
-        - COMPLETED
-        - CANCELLED
-        - REJECTED
-        - ON_HOLD
-        - CONFLICT
-
-    WorkOrder:
-      type: object
-      required: [id, type, status, customerId, createdAt]
-      properties:
-        id: { type: string }
-        type: { $ref: "#/components/schemas/WorkOrderType" }
-        status: { $ref: "#/components/schemas/WorkOrderStatus" }
-        customerId: { type: string }
-        branchId: { type: string }
-        planId: { type: string, nullable: true }
-        requestedProducts:
-          type: array
-          items:
-            type: object
-            required: [productId, qty]
-            properties:
-              productId: { type: string }
-              qty: { type: integer, minimum: 1 }
-        notes: { type: string, nullable: true }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
-
-    CreateWorkOrderRequest:
-      type: object
-      required: [type, customerId, branchId]
-      properties:
-        type: { $ref: "#/components/schemas/WorkOrderType" }
-        customerId: { type: string }
-        branchId: { type: string }
-        planId: { type: string, nullable: true }
-        requestedProducts:
-          type: array
-          items:
-            type: object
-            required: [productId, qty]
-            properties:
-              productId: { type: string }
-              qty: { type: integer, minimum: 1 }
-        notes: { type: string, maxLength: 500, nullable: true }
-
-    ChangeWorkOrderStatusRequest:
-      type: object
-      required: [newStatus, reason]
-      properties:
-        newStatus: { $ref: "#/components/schemas/WorkOrderStatus" }
-        reason: { type: string, minLength: 3, maxLength: 200 }
-
-    
     SyncImportRequest:
       type: object
       required: [meta, operations]
@@ -229,19 +325,125 @@ components:
             properties:
               opId: { type: string }
               entityId: { type: string }
-              reason: { type: string, example: "Version mismatch: server=5 client=3" }
+              reason: { type: string }
+
+    WorkOrderItem:
+      type: object
+      required: [productId, qty]
+      properties:
+        productId: { type: string }
+        qty: { type: integer }
+
+    WorkOrder:
+      type: object
+      required: [id, type, status, customerId, version, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        type:
+          type: string
+          enum: [NEW_SERVICE_INSTALL, CLAIM_TROUBLESHOOT, PLAN_AND_EQUIPMENT_SALE, EQUIPMENT_ONLY_SALE, MONTHLY_PAYMENT, SERVICE_UPGRADE, SERVICE_DOWN_OUTAGE]
+        status:
+          type: string
+          enum: [DRAFT, SUBMITTED, ELIGIBILITY_CHECK, INVENTORY_RESERVATION, ON_HOLD, SCHEDULED, IN_PROGRESS, VERIFICATION, COMPLETED, REJECTED, IN_REVIEW, TECH_ASSIGNMENT, PRODUCT_SELECTION, PAYMENT_CONFIRMATION, FULFILLMENT, DELIVERY, PAYMENT_VALIDATION, RECEIPT_ISSUED, PLAN_CHANGE, TRIAGE, FIELD_DISPATCH, CONFLICT, CANCELLED]
+        customerId: { type: string }
+        branchId: { type: string, nullable: true }
+        planId: { type: string, nullable: true }
+        assignedTechUserId: { type: string, nullable: true }
+        version: { type: integer }
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkOrderItem'
+        technicianNotes: { type: string, description: "Notas del técnico (siempre presente, vacío si no hay)" }
+        checklist:
+          type: array
+          description: "Checklist del técnico (siempre presente, array vacío si no hay)"
+          items:
+            type: object
+            required: [id, label, completed]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              completed: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    UpdateWorkOrderTechDetailsRequest:
+      type: object
+      properties:
+        technicianNotes: { type: string, nullable: true }
+        checklist:
+          type: array
+          nullable: true
+          items:
+            type: object
+            required: [id, label, completed]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              completed: { type: boolean }
+
+    CreateWorkOrderRequest:
+      type: object
+      required: [type, customerId]
+      properties:
+        type:
+          type: string
+          enum: [NEW_SERVICE_INSTALL, CLAIM_TROUBLESHOOT, PLAN_AND_EQUIPMENT_SALE, EQUIPMENT_ONLY_SALE, MONTHLY_PAYMENT, SERVICE_UPGRADE, SERVICE_DOWN_OUTAGE]
+        customerId: { type: string }
+        branchId: { type: string }
+        planId: { type: string }
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkOrderItem'
+
+    UpdateWorkOrderStatusRequest:
+      type: object
+      required: [newStatus, baseVersion]
+      properties:
+        newStatus:
+          type: string
+        baseVersion:
+          type: integer
 
   responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
     Unauthorized:
       description: Unauthorized
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ProblemDetails" }
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
     Forbidden:
       description: Forbidden
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ProblemDetails" }
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    TooManyRequests:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
 
 security:
   - BearerAuth: []
@@ -249,147 +451,325 @@ security:
 paths:
   /health:
     get:
-      security: []
       tags: [Health]
+      security: []
       responses:
-        "200":
+        '200':
           description: ok
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
 
   /auth/login:
     post:
-      security: []
       tags: [Auth]
+      security: []
+      summary: Login with email and password
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [username, password]
-              properties:
-                username: { type: string }
-                password: { type: string }
+              $ref: '#/components/schemas/LoginRequest'
       responses:
-        "200":
-          description: token issued
+        '200':
+          description: Token pair issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Rotate refresh token and issue a new token pair
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: New token pair issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Revoke refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Logged out
           content:
             application/json:
               schema:
                 type: object
-                required: [accessToken, expiresAt]
+                required: [success]
                 properties:
-                  accessToken: { type: string }
-                  expiresAt: { type: string, format: date-time }
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /users:
     get:
       tags: [Users]
+      summary: List users
       responses:
-        "200":
-          description: list users
+        '200':
+          description: Users list
           content:
             application/json:
               schema:
                 type: array
-                items: { $ref: "#/components/schemas/User" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-
-  /users/{userId}/block:
+                items:
+                  $ref: '#/components/schemas/UserPublic'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [Users]
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        "200": { description: blocked }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-
-  /work-orders:
-    post:
-      tags: [WorkOrders]
+      summary: Create user
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/CreateWorkOrderRequest" }
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
       responses:
-        "201":
-          description: created
+        '201':
+          description: User created
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/WorkOrder" }
-        "400":
-          description: validation error
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ProblemDetails" }
-        "409":
-          description: conflict
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ProblemDetails" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 
-  /work-orders/{workOrderId}/status:
+  /users/{id}:
     patch:
-      tags: [WorkOrders]
+      tags: [Users]
+      summary: Update user data and roles
       parameters:
-        - name: workOrderId
-          in: path
+        - in: path
+          name: id
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/ChangeWorkOrderStatusRequest" }
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
       responses:
-        "200":
-          description: updated
+        '200':
+          description: User updated
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/WorkOrder" }
-        "409":
-          description: invalid transition / conflict
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ProblemDetails" }
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
-    
+  /users/{id}/block:
+    post:
+      tags: [Users]
+      summary: Block user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User blocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /roles:
     get:
       tags: [Roles]
+      summary: List roles and permission keys
       responses:
-        "200":
-          description: list roles
+        '200':
+          description: Roles list
           content:
             application/json:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/Role" }
         "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }      
+        "403": { $ref: "#/components/responses/Forbidden" }
 
   /catalog/plans:
     get:
-      tags: [Catalog]
+      tags: [Plans]
+      summary: List plans
       responses:
         "200":
-          description: list plans
+          description: plans list
           content:
             application/json:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/Plan" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [Plans]
+      summary: Create plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePlanRequest" }
+      responses:
+        "201":
+          description: plan created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Plan" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /catalog/plans/{id}:
+    get:
+      tags: [Plans]
+      summary: Get plan by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: plan detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Plan" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Plans]
+      summary: Update plan
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdatePlanRequest" }
+      responses:
+        "200":
+          description: plan updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Plan" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Plans]
+      summary: Delete plan
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: plan deleted
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /catalog/plans/{id}/activate:
+    patch:
+      tags: [Plans]
+      summary: Activate plan
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: plan activated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Plan" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /catalog/plans/{id}/deactivate:
+    patch:
+      tags: [Plans]
+      summary: Deactivate plan
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: plan deactivated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Plan" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /catalog/products:
     get:
@@ -424,7 +804,112 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
+  /inventory/branches:
+    get:
+      tags: [Inventory]
+      responses:
+        "200":
+          description: branches list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Branch" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
 
+  /inventory/products:
+    get:
+      tags: [Inventory]
+      responses:
+        "200":
+          description: products available for inventory operations
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Product" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /inventory/reservations:
+    post:
+      tags: [Inventory]
+      summary: Reserve inventory for a work order (RF-07)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workOrderId, branchId, items]
+              properties:
+                workOrderId: { type: string }
+                branchId: { type: string }
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [productId, qty]
+                    properties:
+                      productId: { type: string }
+                      qty: { type: integer, minimum: 1 }
+      responses:
+        "201":
+          description: Reservation created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [workOrderId, branchId, items, reservedAt]
+                properties:
+                  workOrderId: { type: string }
+                  branchId: { type: string }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        productId: { type: string }
+                        qty: { type: integer }
+                  reservedAt: { type: string, format: date-time }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /inventory/reservations/{workOrderId}:
+    delete:
+      tags: [Inventory]
+      summary: Release reservation for a work order (RF-07)
+      parameters:
+        - in: path
+          name: workOrderId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Reservation released
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [workOrderId, branchId, items, reservedAt]
+                properties:
+                  workOrderId: { type: string }
+                  branchId: { type: string }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        productId: { type: string }
+                        qty: { type: integer }
+                  reservedAt: { type: string, format: date-time }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /sync/import:
     post:
@@ -449,11 +934,109 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
+  /work-orders:
+    get:
+      tags: [WorkOrders]
+      responses:
+        "200":
+          description: work order list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/WorkOrder" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [WorkOrders]
+      summary: Create new work order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateWorkOrderRequest" }
+      responses:
+        "201":
+          description: work order created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkOrder" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
 
+  /work-orders/{id}:
+    get:
+      tags: [WorkOrders]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: get work order
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkOrder" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /work-orders/{id}/status:
+    patch:
+      tags: [WorkOrders]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateWorkOrderStatusRequest" }
+      responses:
+        "200":
+          description: work order updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkOrder" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /work-orders/{id}/tech-details:
+    patch:
+      tags: [WorkOrders]
+      summary: Actualizar notas del técnico y checklist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateWorkOrderTechDetailsRequest" }
+      responses:
+        "200":
+          description: work order actualizado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkOrder" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /audit:
     get:
       tags: [Audit]
+      summary: Lista paginada con filtros de auditoría
       parameters:
         - name: entityType
           in: query
@@ -463,20 +1046,334 @@ paths:
           in: query
           required: false
           schema: { type: string }
+        - name: action
+          in: query
+          required: false
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        "200":
+          description: paginated list of audit events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/AuditEvent" }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      offset: { type: integer }
+                      hasMore: { type: boolean }
+              examples:
+                success:
+                  summary: List of audit events with pagination
+                  value:
+                    items:
+                      - id: "evt-001"
+                        at: "2026-02-27T14:30:00Z"
+                        actorUserId: "user-123"
+                        action: "CREATE"
+                        entityType: "WorkOrder"
+                        entityId: "wo-456"
+                        correlationId: "550e8400-e29b-41d4-a716"
+                    pagination:
+                      total: 150
+                      limit: 50
+                      offset: 0
+                      hasMore: true
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /audit/{auditId}:
+    get:
+      tags: [Audit]
+      summary: Retrieve a single audit event by id
+      parameters:
+        - name: auditId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: single audit event
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuditEvent" }
+              examples:
+                success:
+                  summary: Single audit event
+                  value:
+                    id: "evt-001"
+                    at: "2026-02-27T14:30:00Z"
+                    actorUserId: "user-123"
+                    action: "CREATE"
+                    entityType: "WorkOrder"
+                    entityId: "wo-456"
+                    before: null
+                    after:
+                      status: "OPEN"
+                      technician: "Torres"
+                    correlationId: "550e8400-e29b-41d4-a716"
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetails" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /audit/entity/{entityType}/{entityId}:
+    get:
+      tags: [Audit]
+      summary: Get history for a specific entity
+      parameters:
+        - name: entityType
+          in: path
+          required: true
+          schema: { type: string }
+        - name: entityId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: audit history of an entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entity:
+                    type: object
+                    properties:
+                      type: { type: string }
+                      id: { type: string }
+                  events:
+                    type: array
+                    items: { $ref: "#/components/schemas/AuditEvent" }
+                  total: { type: integer }
+              examples:
+                success:
+                  summary: Entity audit history
+                  value:
+                    entity:
+                      type: "WorkOrder"
+                      id: "wo-456"
+                    events:
+                      - id: "evt-001"
+                        at: "2026-02-27T14:30:00Z"
+                        actorUserId: "user-123"
+                        action: "CREATE"
+                        entityType: "WorkOrder"
+                        entityId: "wo-456"
+                      - id: "evt-002"
+                        at: "2026-02-27T15:45:00Z"
+                        actorUserId: "user-456"
+                        action: "UPDATE"
+                        entityType: "WorkOrder"
+                        entityId: "wo-456"
+                    total: 2
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /audit/user/{userId}:
+    get:
+      tags: [Audit]
+      summary: Get events performed by a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+      responses:
+        "200":
+          description: audit events by user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { type: string }
+                  events:
+                    type: array
+                    items: { $ref: "#/components/schemas/AuditEvent" }
+                  count: { type: integer }
+              examples:
+                success:
+                  summary: Events performed by user
+                  value:
+                    user: "user-123"
+                    events:
+                      - id: "evt-001"
+                        at: "2026-02-27T14:30:00Z"
+                        actorUserId: "user-123"
+                        action: "CREATE"
+                        entityType: "WorkOrder"
+                        entityId: "wo-456"
+                        correlationId: "550e8400-e29b-41d4-a716"
+                      - id: "evt-003"
+                        at: "2026-02-26T09:20:00Z"
+                        actorUserId: "user-123"
+                        action: "RESERVE"
+                        entityType: "InventoryItem"
+                        entityId: "inv-112"
+                        correlationId: "550e8400-e29b-41d4-a718"
+                    count: 2
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /audit/search:
+    get:
+      tags: [Audit]
+      summary: Search audit events with criteria
+      parameters:
+        - name: action
+          in: query
+          required: false
+          schema: { type: string }
+        - name: entityType
+          in: query
+          required: false
+          schema: { type: string }
+        - name: startDate
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+        - name: endDate
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
       responses:
         "200":
           description: audit events
           content:
             application/json:
               schema:
-                type: array
-                items: { $ref: "#/components/schemas/AuditEvent" }
+                type: object
+                properties:
+                  criteria:
+                    type: object
+                    properties:
+                      action: { type: string, nullable: true }
+                      entityType: { type: string, nullable: true }
+                      startDate: { type: string, format: date-time, nullable: true }
+                      endDate: { type: string, format: date-time, nullable: true }
+                  events:
+                    type: array
+                    items: { $ref: "#/components/schemas/AuditEvent" }
+                  count: { type: integer }
+              examples:
+                success:
+                  summary: Search results with date range
+                  value:
+                    criteria:
+                      action: "CREATE"
+                      entityType: "WorkOrder"
+                      startDate: "2026-02-25T00:00:00Z"
+                      endDate: "2026-02-27T23:59:59Z"
+                    events:
+                      - id: "evt-001"
+                        at: "2026-02-27T14:30:00Z"
+                        actorUserId: "user-123"
+                        action: "CREATE"
+                        entityType: "WorkOrder"
+                        entityId: "wo-456"
+                        correlationId: "550e8400-e29b-41d4-a716"
+                    count: 1
+        "400":
+          description: validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProblemDetails" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+
+  /dashboard/kpis:
+    get:
+      tags: [KPIs]
+      operationId: getDashboardKpis
+      summary: Dashboard KPIs summary (RF-13)
+      description: |
+        Returns all KPIs (KPI-01 to KPI-10) with formulas, source references and validation rules.
+        Requires permission kpis:read. Response includes generatedAt, timezone, kpis object, cards array and validationRules.
+      responses:
+        "200":
+          description: dashboard kpi payload
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [generatedAt, timezone, kpis, cards]
+                properties:
+                  generatedAt: { type: string, format: date-time }
+                  timezone: { type: string }
+                  source:
+                    type: object
+                    description: Source files for work orders, inventory and users (RF-13 traceability)
+                    additionalProperties: { type: string }
+                  kpis:
+                    type: object
+                    description: KPI-01 to KPI-10 with formula and values per docs/10-kpi.md
+                    additionalProperties: true
+                  cards:
+                    type: array
+                    description: Summary cards for dashboard UI (id, label, value, optional unit)
+                    items:
+                      type: object
+                      required: [id, label, value]
+                      properties:
+                        id: { type: string }
+                        label: { type: string }
+                        value: { type: number }
+                        unit: { type: string, nullable: true }
+                  validationRules:
+                    type: array
+                    items: { type: string }
+                    description: Rules applied (e.g. RB-06, valid statuses, excluded invalid dates)
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
   /kpis/summary:
     get:
       tags: [KPIs]
+      operationId: getKpisSummary
+      summary: Legacy alias for dashboard KPI summary
+      description: Same payload as GET /dashboard/kpis. Requires kpis:read.
       responses:
         "200":
           description: kpi summary
