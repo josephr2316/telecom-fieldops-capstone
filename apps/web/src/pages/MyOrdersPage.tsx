@@ -10,7 +10,7 @@ import {
   pushToOfflineQueue,
   removeOfflineQueueItem,
   setOfflineQueue,
-  downloadOfflineExport,
+  downloadOfflineQueueAsJson,
   type OfflineQueueItem,
 } from "../utils/offlineQueue";
 
@@ -213,17 +213,15 @@ export default function MyOrdersPage() {
                 className="mt-4"
               />
             )}
-            {currentQueue.length > 0 && (
-              <div className="mt-4">
-                <button
-                  type="button"
-                  onClick={() => downloadOfflineExport()}
-                  className="bg-[#002D72] text-white px-4 py-2 text-sm rounded-sm hover:bg-[#001F4D]"
-                >
-                  Exportar cambios offline a JSON (RF-11)
-                </button>
-              </div>
-            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={downloadOfflineQueueAsJson}
+                className="bg-gray-100 border border-gray-300 text-gray-800 px-3 py-2 text-sm rounded-sm hover:bg-gray-200"
+              >
+                Exportar cola offline a JSON (RF-11)
+              </button>
+            </div>
           </header>
 
           {message && (
