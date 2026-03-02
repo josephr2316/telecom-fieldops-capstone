@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { Navigate } from "react-router-dom";
 import { authService } from "../services/auth";
 
-const INACTIVITY_LIMIT_MS = 2 * 60 * 1000;
+const INACTIVITY_LIMIT_MS = 5 * 60 * 1000;
 
 type RequireAuthProps = {
   children: ReactElement;

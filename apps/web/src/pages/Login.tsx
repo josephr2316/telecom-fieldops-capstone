@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "../services/auth";
 
-const INACTIVITY_LIMIT_MS = 2 * 60 * 1000;
+const INACTIVITY_LIMIT_MS = 5 * 60 * 1000;
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ function LoginPage() {
       return;
     }
 
-    navigate("/reserve", { replace: true });
+    navigate("/home", { replace: true });
   }, [navigate]);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ function LoginPage() {
       const session = await authService.loginWithPassword(email, password);
       authService.setSession(session);
       authService.markActivity();
-      navigate("/reserve", { replace: true });
+      navigate("/home", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al iniciar sesion.");
     } finally {

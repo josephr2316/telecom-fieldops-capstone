@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { authService } from "../services/auth";
 
-const INACTIVITY_LIMIT_MS = 2 * 60 * 1000;
+const INACTIVITY_LIMIT_MS = 5 * 60 * 1000;
 const REFRESH_CHECK_INTERVAL_MS = 15 * 1000;
 const REFRESH_BUFFER_MS = 60 * 1000;
 

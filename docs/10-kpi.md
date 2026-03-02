@@ -62,3 +62,7 @@ KPI-10 Porcentaje de instalaciones fallidas / re-trabajo
 Formato para frontend dashboard:
 - `generatedAt`, `timezone`, `source`, `kpis`, `cards`, `validationRules`
 - `cards` es el arreglo listo para widgets de resumen en UI.
+
+Requisitos:
+- Cada KPI debe indicar su fuente de datos y formulas.
+- Los KPIs deben respetar RB y no contar registros invalidos.

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Layout from "../layouts/Layout";
+import { authService } from "../services/auth";
 
 interface NavCard {
   title: string;
@@ -51,30 +52,28 @@ export default function HomePage() {
   const [username, setUsername] = useState<string>("");
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
+    const session = authService.getSession();
+    if (!session) {
       navigate("/");
       return;
     }
+
+    if (authService.isInactive(5 * 60 * 1000)) {
+      authService.clearSession();
+      navigate("/", { replace: true });
+      return;
+    }
+
     try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        const user = JSON.parse(storedUser) as { email?: string };
-        setUsername(user.email?.split("@")[0] ?? "");
-      } else {
-        const payload = JSON.parse(atob(token.split(".")[1])) as { email?: string; sub?: string };
-        setUsername(payload.email?.split("@")[0] ?? payload.sub ?? "");
-      }
+      setUsername(session.user?.email?.split("@")[0] ?? "");
     } catch {
       setUsername("");
     }
   }, [navigate]);
 
-  function handleLogout() {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("user");
-    navigate("/");
+  async function handleLogout() {
+    await authService.logout();
+    navigate("/", { replace: true });
   }
 
   return (
